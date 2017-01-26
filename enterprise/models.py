@@ -642,7 +642,7 @@ class EnterpriseCourseEnrollment(TimeStampedModel):
             # If it is indeterminate...
 
             # Check for an account-wide value and use that.
-            consent_state = self.enterprise_customer_user.userdatasharingconsentaudit_set.first()
+            consent_state = self.enterprise_customer_user.data_sharing_consent.first()
             if consent_state is not None:
                 return consent_state.enabled
             else:

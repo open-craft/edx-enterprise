@@ -20,7 +20,8 @@ from enterprise.models import (EnterpriseCourseEnrollment, EnterpriseCustomer, E
                                EnterpriseCustomerIdentityProvider, EnterpriseCustomerUser, UserDataSharingConsentAudit)
 from enterprise.utils import consent_necessary_for_course, disable_for_loaddata, get_all_field_names
 from test_utils.factories import (EnterpriseCustomerBrandingFactory, EnterpriseCustomerFactory,
-                                  EnterpriseCustomerUserFactory, UserDataSharingConsentAuditFactory, UserFactory)
+                                  EnterpriseCustomerIdentityProviderFactory, EnterpriseCustomerUserFactory,
+                                  UserDataSharingConsentAuditFactory, UserFactory)
 
 
 def mock_get_available_idps(idps):
@@ -130,8 +131,8 @@ class TestUtils(unittest.TestCase):
         (
             EnterpriseCustomerUser,
             [
-                "enterprise_enrollments",
                 "data_sharing_consent",
+                "enterprise_enrollments",
                 "id",
                 "created",
                 "modified",
