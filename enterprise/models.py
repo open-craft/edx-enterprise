@@ -230,7 +230,9 @@ class EnterpriseCustomerUser(TimeStampedModel):
         user_id (:class:`django.db.models.IntegerField`): user identifier
     """
 
-    enterprise_customer = models.ForeignKey(EnterpriseCustomer, blank=False, null=False)
+    enterprise_customer = models.ForeignKey(
+        EnterpriseCustomer, blank=False, null=False, related_name='enterprise_customer_users'
+    )
     user_id = models.PositiveIntegerField(null=False, blank=False)
 
     objects = EnterpriseCustomerUserManager()
@@ -508,7 +510,7 @@ class UserDataSharingConsentAudit(TimeStampedModel):
         (DISABLED, 'Disabled'),
     )
 
-    user = models.ForeignKey(EnterpriseCustomerUser)
+    user = models.ForeignKey(EnterpriseCustomerUser, related_name='data_sharing_consent')
 
     state = models.CharField(
         max_length=8,

@@ -7,9 +7,9 @@ python:
   - 3.5
 
 env:
-  - TOXENV=django18
-  - TOXENV=django19
-  - TOXENV=django110
+  - TOXENV=django18-djangorestframework32-djangofilter011
+  - TOXENV=django19-djangorestframework32-djangofilter011
+  - TOXENV=django110-djangorestframework35-djangofilter10
 
 matrix:
   include:
