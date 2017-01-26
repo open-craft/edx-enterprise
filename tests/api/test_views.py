@@ -191,7 +191,23 @@ class TestEnterpriseAPIViews(APITest):
                 'entitlement_id': 1
             }],
         ),
-
+        (
+            factories.EnterpriseCourseEnrollmentFactory,
+            reverse('enterprise-course-enrollment-list'),
+            itemgetter('course_id'),
+            [{
+                'id': 1,
+                'enterprise_customer_user__id': 1,
+                'course_id': 'course-v1:edX+DemoX+Demo_Course',
+                'consent_granted': True
+            }],
+            [{
+                'id': 1,
+                'enterprise_customer_user': 1,
+                'course_id': 'course-v1:edX+DemoX+Demo_Course',
+                'consent_granted': True
+            }],
+        ),
     )
     @ddt.unpack
     def test_api_views(self, factory, url, sorting_key, model_items, expected_json):
@@ -204,3 +220,39 @@ class TestEnterpriseAPIViews(APITest):
         response = self.load_json(response.content)
 
         assert sorted(expected_json, key=sorting_key) == sorted(response['results'], key=sorting_key)
+
+    def test_course_enrollment_mutation(self):
+        """
+        Make sure API allows creating and updating enterprise course enrollments.
+        """
+        enterprise_customer_user = factories.EnterpriseCustomerUserFactory.create()
+        list_url = settings.TEST_SERVER + reverse('enterprise-course-enrollment-list')
+
+        # No EnterpriseCourseEnrollments exist initially.
+        response = self.client.get(list_url)
+        response = self.load_json(response.content)
+        assert len(response['results']) == 0
+
+        # Create a new EnterpriseCourseEnrollment via API POST.
+        data = {
+            'enterprise_customer_user': enterprise_customer_user.id,
+            'course_id': 'course-v1:my+enterprise+course',
+            'consent_granted': False
+        }
+        self.client.post(list_url, data=data)
+        response = self.client.get(list_url)
+        response = self.load_json(response.content)
+        assert len(response['results']) == 1
+        result = response['results'][0]
+
+        id = result['id']
+        assert result['enterprise_customer_user'] == data['enterprise_customer_user']
+        assert result['course_id'] == data['course_id']
+        assert result['consent_granted'] == False
+
+        # Update the EnterpriseCourseEnrollment via API PATCH.
+        detail_url = settings.TEST_SERVER + reverse('enterprise-course-enrollment-detail', args=[id])
+        self.client.patch(detail_url, data={'consent_granted': True})
+        response = self.client.get(detail_url)
+        response = self.load_json(response.content)
+        assert response['consent_granted'] == True
