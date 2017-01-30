@@ -19,7 +19,8 @@ from enterprise import utils
 from enterprise.models import (EnterpriseCourseEnrollment, EnterpriseCustomer, EnterpriseCustomerBrandingConfiguration,
                                EnterpriseCustomerIdentityProvider, EnterpriseCustomerUser, UserDataSharingConsentAudit)
 from enterprise.utils import consent_necessary_for_course, disable_for_loaddata, get_all_field_names
-from test_utils.factories import (EnterpriseCustomerFactory, EnterpriseCustomerUserFactory,
+from test_utils.factories import (EnterpriseCustomerBrandingFactory, EnterpriseCustomerFactory,
+                                  EnterpriseCustomerIdentityProviderFactory, EnterpriseCustomerUserFactory,
                                   UserDataSharingConsentAuditFactory, UserFactory)
 
 
@@ -40,12 +41,24 @@ def mock_get_available_idps(idps):
     return _
 
 
+@mark.django_db
 @ddt.ddt
 @mark.django_db
 class TestUtils(unittest.TestCase):
     """
     Tests for utility functions.
     """
+    def setUp(self):
+        """
+        Set up test environment.
+        """
+        super(TestUtils, self).setUp()
+        faker = FakerFactory.create()
+        self.provider_id = faker.slug()
+        self.uuid = faker.uuid4()
+        self.customer = EnterpriseCustomerFactory(uuid=self.uuid)
+        EnterpriseCustomerIdentityProviderFactory(provider_id=self.provider_id, enterprise_customer=self.customer)
+
     @staticmethod
     def get_magic_name(value):
         """
@@ -99,7 +112,7 @@ class TestUtils(unittest.TestCase):
         (
             EnterpriseCustomer,
             [
-                "enterprisecustomeruser",
+                "enterprise_customer_users",
                 "pendingenterprisecustomeruser",
                 "branding_configuration",
                 "enterprise_customer_identity_provider",
@@ -118,7 +131,7 @@ class TestUtils(unittest.TestCase):
         (
             EnterpriseCustomerUser,
             [
-                "userdatasharingconsentaudit",
+                "data_sharing_consent",
                 "enterprise_enrollments",
                 "id",
                 "created",
@@ -279,3 +292,46 @@ class TestUtils(unittest.TestCase):
         account_consent.delete()  # pylint: disable=no-member
         enrollment.delete()
         assert consent_necessary_for_course(user, course_id) is False
+
+    def test_enterprise_branding_info_by_provider_id(self):
+        """
+        Test `get_enterprise_branding_info_by_provider_id` helper method.
+        """
+        EnterpriseCustomerBrandingFactory(
+            enterprise_customer=self.customer,
+            logo='/test_1.png/'
+        )
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_provider_id(),
+            None,
+        )
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_provider_id(identity_provider_id=self.provider_id).logo,
+            '/test_1.png/',
+        )
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_provider_id(identity_provider_id='fake'),
+            None,
+        )
+
+    def test_enterprise_branding_info_by_ec_uuid(self):
+        """
+        Test `get_enterprise_branding_info_by_ec_uuid` helper method.
+        """
+        EnterpriseCustomerBrandingFactory(
+            enterprise_customer=self.customer,
+            logo='/test_2.png/'
+        )
+
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_ec_uuid(),
+            None,
+        )
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_ec_uuid(ec_uuid=self.uuid).logo,
+            '/test_2.png/',
+        )
+        self.assertEqual(
+            utils.get_enterprise_branding_info_by_ec_uuid(ec_uuid=FakerFactory.create().uuid4()),
+            None,
+        )

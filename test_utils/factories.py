@@ -11,9 +11,10 @@ from faker import Factory as FakerFactory
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 
-from enterprise.models import (EnterpriseCustomer, EnterpriseCustomerBrandingConfiguration,
-                               EnterpriseCustomerIdentityProvider, EnterpriseCustomerUser, PendingEnrollment,
-                               PendingEnterpriseCustomerUser, UserDataSharingConsentAudit)
+from enterprise.models import (EnterpriseCourseEnrollment, EnterpriseCustomer, EnterpriseCustomerBrandingConfiguration,
+                               EnterpriseCustomerEntitlement, EnterpriseCustomerIdentityProvider,
+                               EnterpriseCustomerUser, PendingEnrollment, PendingEnterpriseCustomerUser,
+                               UserDataSharingConsentAudit)
 
 FAKER = FakerFactory.create()
 
@@ -57,7 +58,7 @@ class EnterpriseCustomerFactory(factory.django.DjangoModelFactory):
 
 class EnterpriseCustomerUserFactory(factory.django.DjangoModelFactory):
     """
-    EnterpriseCustomer factory.
+    EnterpriseCustomerUser factory.
 
     Creates an instance of EnterpriseCustomerUser with minimal boilerplate - uses this class' attributes as default
     parameters for EnterpriseCustomerUser constructor.
@@ -65,13 +66,32 @@ class EnterpriseCustomerUserFactory(factory.django.DjangoModelFactory):
 
     class Meta(object):
         """
-        Meta for EnterpriseCustomerFactory.
+        Meta for EnterpriseCustomerUserFactory.
         """
 
         model = EnterpriseCustomerUser
 
     enterprise_customer = factory.SubFactory(EnterpriseCustomerFactory)
     user_id = factory.LazyAttribute(lambda x: FAKER.pyint())
+
+
+class EnterpriseCourseEnrollmentFactory(factory.django.DjangoModelFactory):
+    """
+    EnterpriseCourseEnrollment factory.
+
+    Creates an instance of EnterpriseCourseEnrollment with minimal boilerplate - uses this class' attributes as default
+    parameters for EnterpriseCourseEnrollment constructor.
+    """
+
+    class Meta(object):
+        """
+        Meta for EnterpriseCourseEnrollmentFactory.
+        """
+
+        model = EnterpriseCourseEnrollment
+
+    enterprise_customer_user = factory.SubFactory(EnterpriseCustomerUserFactory)
+    course_id = factory.LazyAttribute(lambda x: FAKER.slug())
 
 
 class UserDataSharingConsentAuditFactory(factory.django.DjangoModelFactory):
@@ -150,7 +170,7 @@ class EnterpriseCustomerBrandingFactory(factory.django.DjangoModelFactory):
     """
     EnterpriseCustomerBrandingFactory factory.
 
-    Creates an instance of EnterpriseCustomerBrandingFactory with minimal boilerplate - uses this class' attributes as
+    Creates an instance of EnterpriseCustomerBranding with minimal boilerplate - uses this class' attributes as
     default parameters for EnterpriseCustomerBrandingFactory constructor.
     """
 
@@ -178,3 +198,23 @@ class PendingEnrollmentFactory(factory.django.DjangoModelFactory):
     course_id = factory.LazyAttribute(lambda x: FAKER.slug())
     course_mode = 'audit'
     user = factory.SubFactory(PendingEnterpriseCustomerUserFactory)
+
+
+class EnterpriseCustomerEntitlementFactory(factory.django.DjangoModelFactory):
+    """
+    EnterpriseCustomerEntitlement factory.
+
+    Creates an instance of EnterpriseCustomerEntitlement with minimal boilerplate - uses this class' attributes as
+    default parameters for EnterpriseCustomerBrandingFactory constructor.
+    """
+
+    class Meta(object):
+        """
+        Meta for EnterpriseCustomerEntitlementFactory.
+        """
+
+        model = EnterpriseCustomerEntitlement
+
+    id = factory.LazyAttribute(lambda x: FAKER.random_int(min=1))  # pylint: disable=invalid-name
+    entitlement_id = factory.LazyAttribute(lambda x: FAKER.random_int(min=1))
+    enterprise_customer = factory.SubFactory(EnterpriseCustomerFactory)

@@ -12,6 +12,8 @@ from functools import wraps
 from django.apps import apps
 from django.conf import settings
 
+import enterprise
+
 try:
     from edxmako.paths import add_lookup
 except ImportError:
@@ -226,3 +228,33 @@ def consent_necessary_for_course(user, course_id):
     except EnterpriseCourseEnrollment.DoesNotExist:
         return False
     return enrollment.consent_needed
+
+
+def get_enterprise_branding_info_by_provider_id(identity_provider_id=None):  # pylint: disable=invalid-name
+    """
+    Return the EnterpriseCustomer branding information based on provider_id.
+
+    Arguments:
+        identity_provider_id: There is 1:1 relation b/w EnterpriseCustomer and Identity provider.
+
+    Returns:
+        EnterpriseCustomerBrandingConfiguration instance associated with the customer of given identity provider.
+    """
+    return enterprise.models.EnterpriseCustomerBrandingConfiguration.objects.filter(
+        enterprise_customer__enterprise_customer_identity_provider__provider_id=identity_provider_id
+    ).first()
+
+
+def get_enterprise_branding_info_by_ec_uuid(ec_uuid=None):  # pylint: disable=invalid-name
+    """
+    Return the EnterpriseCustomer branding information based on enterprise customer uuid.
+
+    Arguments:
+        ec_uuid (UUID): a universally unique identifier for the enterprise customer.
+
+    Returns:
+        EnterpriseCustomerBrandingConfiguration instance associated with the given enterprise customer uuid.
+    """
+    return enterprise.models.EnterpriseCustomerBrandingConfiguration.objects.filter(
+        enterprise_customer__uuid=ec_uuid
+    ).first()
