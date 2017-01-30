@@ -106,5 +106,5 @@ class EnterpriseCourseEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EnterpriseCourseEnrollment
         fields = (
-            'id', 'enterprise_customer_user', 'course_id', 'consent_granted'
+            'id', 'enterprise_customer_user', 'course_id', 'consent_granted', 'consent_available', 'consent_needed'
         )

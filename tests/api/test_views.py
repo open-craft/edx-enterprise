@@ -205,7 +205,9 @@ class TestEnterpriseAPIViews(APITest):
                 'id': 1,
                 'enterprise_customer_user': 1,
                 'course_id': 'course-v1:edX+DemoX+Demo_Course',
-                'consent_granted': True
+                'consent_granted': True,
+                'consent_available': True,
+                'consent_needed': False
             }],
         ),
     )
@@ -249,6 +251,8 @@ class TestEnterpriseAPIViews(APITest):
         assert result['enterprise_customer_user'] == data['enterprise_customer_user']
         assert result['course_id'] == data['course_id']
         assert result['consent_granted'] == False
+        assert result['consent_available'] == False
+        assert result['consent_needed'] == True
 
         # Update the EnterpriseCourseEnrollment via API PATCH.
         detail_url = settings.TEST_SERVER + reverse('enterprise-course-enrollment-detail', args=[id])
@@ -256,3 +260,5 @@ class TestEnterpriseAPIViews(APITest):
         response = self.client.get(detail_url)
         response = self.load_json(response.content)
         assert response['consent_granted'] == True
+        assert response['consent_available'] == True
+        assert response['consent_needed'] == False
