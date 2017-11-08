@@ -52,93 +52,139 @@ class DegreedAPIClient(object):
         Send a completion status payload to the Degreed Completion Status endpoint
 
         Args:
-            degreed_user_id (str): The degreed user id that the completion status is being sent for.
-            payload (str): JSON encoded object (serialized from DegreedLearnerDataTransmissionAudit)
+            payload: JSON encoded object (serialized from DegreedLearnerDataTransmissionAudit)
                 containing completion status fields per Degreed documentation.
 
         Returns:
-            The body of the response from Degreed, if successful
+            A tuple containing the status code and the body of the response.
         Raises:
             HTTPError: if we received a failure response code from Degreed
         """
         return self._post(
-            urljoin(
-                self.global_degreed_config.degreed_base_url,
-                self.global_degreed_config.completion_status_api_path
-            ),
+            urljoin(self.global_degreed_config.degreed_base_url, self.global_degreed_config.completion_status_api_path),
+            payload,
+            self.COMPLETION_PROVIDER_SCOPE
+        )
+
+    def delete_completion_status(self, payload):
+        """
+        Delete a completion status previously sent to the Degreed Completion Status endpoint
+
+        Args:
+            payload: JSON encoded object (serialized from DegreedLearnerDataTransmissionAudit)
+                containing the required completion status fields for deletion per Degreed documentation.
+
+        Returns:
+            A tuple containing the status code and the body of the response.
+        Raises:
+            HTTPError: if we received a failure response code from Degreed
+        """
+        return self._delete(
+            urljoin(self.global_degreed_config.degreed_base_url, self.global_degreed_config.completion_status_api_path),
             payload,
             self.COMPLETION_PROVIDER_SCOPE
         )
 
     def send_course_import(self, payload):
         """
-        Send courses payload to the Degreed Course Content endpoint
+        Send courses payload to the Degreed Course Content endpoint.
 
         Args:
             payload: JSON encoded object containing course import data per Degreed documentation.
 
         Returns:
-            The body of the response from Degreed, if successful
+            A tuple containing the status code and the body of the response.
         Raises:
-            HTTPError: if we received a failure response code from Degreed
+            HTTPError: if we received a failure response code from Degreed.
         """
         return self._post(
-            urljoin(
-                self.global_degreed_config.degreed_base_url,
-                self.global_degreed_config.course_api_path
-            ),
+            urljoin(self.global_degreed_config.degreed_base_url, self.global_degreed_config.course_api_path),
+            payload,
+            self.CONTENT_PROVIDER_SCOPE
+        )
+
+    def delete_course_import(self, payload):
+        """
+        Delete a course in the upstream Degreed Course Catalog.
+
+        Args:
+            payload: JSON encoded object containing the required course data for deletion.
+
+        Returns:
+            A tuple containing the status code and the body of the response.
+        Raises:
+            HTTPError: if we received a failure response code from Degreed.
+        """
+        return self._delete(
+            urljoin(self.global_degreed_config.degreed_base_url, self.global_degreed_config.course_api_path),
             payload,
             self.CONTENT_PROVIDER_SCOPE
         )
 
     def _post(self, url, data, scope):
         """
-        Make a post request using the session object to a Degreed endpoint.
+        Make a POST request using the session object to a Degreed endpoint.
 
         Args:
-            url (str): The url to post to.
-            data (str): The json encoded payload to post.
+            url (str): The url to send a POST request to.
+            data (str): The json encoded payload to POST.
             scope (str): Must be one of the scopes Degreed expects:
                         - `CONTENT_PROVIDER_SCOPE`
                         - `COMPLETION_PROVIDER_SCOPE`
         """
-        now = datetime.datetime.utcnow()
-        if self.session is None or self.expires_at is None or now >= self.expires_at:
-            # Create a new session with a valid token
-            if self.session:
-                self.session.close()
-            self._create_session(scope)
+        self._create_session(scope)
         response = self.session.post(url, data=data)
+        return response.status_code, response.text
+
+    def _delete(self, url, data, scope):
+        """
+        Make a DELETE request using the session object to a Degreed endpoint.
+
+        Args:
+            url (str): The url to send a DELETE request to.
+            data (str): The json encoded payload to DELETE.
+            scope (str): Must be one of the scopes Degreed expects:
+                        - `CONTENT_PROVIDER_SCOPE`
+                        - `COMPLETION_PROVIDER_SCOPE`
+        """
+        self._create_session(scope)
+        response = self.session.delete(url, data=data)
         return response.status_code, response.text
 
     def _create_session(self, scope):
         """
         Instantiate a new session object for use in connecting with Degreed
         """
-        oauth_access_token, expires_at = self._get_oauth_access_token(
-            self.enterprise_configuration.key,
-            self.enterprise_configuration.secret,
-            self.global_degreed_config.degreed_user_id,
-            self.global_degreed_config.degreed_user_password,
-            scope
-        )
-        session = requests.Session()
-        session.timeout = self.SESSION_TIMEOUT
-        session.headers['Authorization'] = 'Bearer {}'.format(oauth_access_token)
-        session.headers['content-type'] = 'application/json'
-        self.session = session
-        self.expires_at = expires_at
+        now = datetime.datetime.utcnow()
+        if self.session is None or self.expires_at is None or now >= self.expires_at:
+            # Create a new session with a valid token
+            if self.session:
+                self.session.close()
+            oauth_access_token, expires_at = self._get_oauth_access_token(
+                self.enterprise_configuration.key,
+                self.enterprise_configuration.secret,
+                self.global_degreed_config.degreed_user_id,
+                self.global_degreed_config.degreed_user_password,
+                scope
+            )
+            session = requests.Session()
+            session.timeout = self.SESSION_TIMEOUT
+            session.headers['Authorization'] = 'Bearer {}'.format(oauth_access_token)
+            session.headers['content-type'] = 'application/json'
+            self.session = session
+            self.expires_at = expires_at
 
     def _get_oauth_access_token(self, client_id, client_secret, user_id, user_password, scope):
         """ Retrieves OAuth 2.0 access token using the client credentials grant.
 
         Args:
-            url_base (str): Oauth2 access token endpoint
-            client_id (str): client ID
-            client_secret (str): client secret
-            company_id (str): Degreed company ID
-            user_id (str): Degreed user ID
-            user_type (str): type of Degreed user (admin or user)
+            client_id (str): API client ID
+            client_secret (str): API client secret
+            user_id (str): Degreed company ID
+            user_password (str): Degreed user password
+            scope (str): Must be one of the scopes Degreed expects:
+                        - `CONTENT_PROVIDER_SCOPE`
+                        - `COMPLETION_PROVIDER_SCOPE`
 
         Returns:
             tuple: Tuple containing access token string and expiration datetime.

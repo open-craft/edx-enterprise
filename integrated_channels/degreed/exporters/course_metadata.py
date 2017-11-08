@@ -6,15 +6,15 @@ Course metadata exporter for Enterprise Integrated Channel Degreed.
 from __future__ import absolute_import, unicode_literals
 
 import json
-import os
 from logging import getLogger
 
 from integrated_channels.integrated_channel.exporters.course_metadata import CourseExporter
 
 from django.conf import settings
 
+from enterprise.utils import is_course_run_enrollable
+
 LOGGER = getLogger(__name__)
-COURSE_URL_SCHEME = os.environ.get('DEGREED_COURSE_EXPORT_DEFAULT_URL_SCHEME', 'https')
 
 
 class DegreedCourseExporter(CourseExporter):  # pylint: disable=abstract-method
@@ -31,19 +31,32 @@ class DegreedCourseExporter(CourseExporter):  # pylint: disable=abstract-method
 
     def export(self):
         """
-        Return serialized blocks of data representing the courses to be POSTed, 1000 at a time.
+        Return serialized blocks of course metadata, which may be POST'd or DELETE'd depending on course enrollability.
 
         Yields:
-            bytes: JSON-serialized course metadata structure
+            tuple: Contains the serialized course metadata JSON dump, and the method to be used.
+                    - Method is one of 'POST' or 'DELETE'.
         """
-        yield json.dumps(
-            {
-                'courses': self.courses,
-                'orgCode': self.enterprise_configuration.degreed_company_id,
-                'providerCode': self.enterprise_configuration.provider_id,
-            },
-            sort_keys=True
-        ).encode('utf-8')
+        unenrollable_courses = []
+        enrollable_courses = []
+        for course_run in self.courses:
+            if is_course_run_enrollable(course_run):
+                enrollable_courses.append(course_run)
+            else:
+                unenrollable_courses.append(course_run)
+        for course_group, method in [(unenrollable_courses, 'DELETE'), (enrollable_courses, 'POST')]:
+            if course_group:
+                yield (
+                    json.dumps(
+                        {
+                            'courses': course_group,
+                            'orgCode': self.enterprise_configuration.degreed_company_id,
+                            'providerCode': self.enterprise_configuration.provider_id,
+                        },
+                        sort_keys=True
+                    ).encode('utf-8'),
+                    method
+                )
 
     @property
     def data(self):
@@ -67,6 +80,29 @@ class DegreedCourseExporter(CourseExporter):  # pylint: disable=abstract-method
             'costType': self.transform_cost_type,
             'language': self.transform_language_code
         }
+
+    def transform(self, course_run):
+        """
+        Parse the provided course into the format natively supported by the provider.
+
+        For Degreed, if a course run is unenrollable, it shouldn't be appearing in the
+        upstream catalog. In that case, we just prepare a payload that is meant for deletion.
+        The transmitter will do a check itself to see enrollability, and properly ``DELETE``
+        the course.
+        """
+        LOGGER.info('Processing course with ID %s', course_run['key'])
+        LOGGER.debug('Parsing course for %s: %s', self.enterprise_customer, json.dumps(course_run, indent=4))
+
+        # Add the enterprise customer to the course run details so it can be used in the data transform
+        course_run['enterprise_customer'] = self.enterprise_customer
+        transformed_data = {}
+        if is_course_run_enrollable(course_run):
+            for key, transform in self.data.items():
+                transformed_data[key] = transform(course_run) if transform is not None else course_run.get(key)
+        else:
+            # For courses that should be deleted, we just need their ID.
+            transformed_data['contentId'] = self.transform_course_id(course_run)
+        return transformed_data
 
     def transform_category_tags(self, course_run):  # pylint: disable=unused-argument
         """

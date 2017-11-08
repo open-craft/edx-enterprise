@@ -73,7 +73,7 @@ class CourseTransmitter(Transmitter):
             audit_summary=json.dumps(payload.resolve_removed_courses(last_audit_summary)),
         ).save()
 
-    def transmit_block(self, course_metadata):
+    def transmit_block(self, course_metadata, method='POST'):
         """
         Transmit a block of course metadata to the integrated channel.
 
@@ -81,14 +81,24 @@ class CourseTransmitter(Transmitter):
 
         Args:
             course_metadata (bytes): A set of bytes containing a page's worth of course metadata
+            method (str): One of ``POST`` or ``DELETE``, deciding which action the client should take
+                          for this course run.
 
         Returns:
             status_code (int): An integer status for the HTTP request
             body (str): The server's response body
         """
         LOGGER.info(course_metadata)
+
+        if method == 'POST':
+            method = self.client.send_course_import
+        elif method == 'DELETE':
+            method = self.client.delete_course_import
+        else:
+            raise ValueError('Invalid method provided for the transmission of this course block: {}'.format(method))
+
         try:
-            status_code, body = self.client.send_course_import(course_metadata)
+            status_code, body = method(course_metadata)
         except RequestException as request_exception:
             status_code = 500
             body = str(request_exception)
