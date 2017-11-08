@@ -21,7 +21,7 @@ class LearnerTransmitter(Transmitter):
 
     def __init__(self, enterprise_configuration, client=IntegratedChannelApiClient):
         """
-        By default, use the interface integrated channel API client which raises an error if used.
+        By default, use the abstract integrated channel API client which raises an error when used if not subclassed.
         """
         super(LearnerTransmitter, self).__init__(
             enterprise_configuration=enterprise_configuration,

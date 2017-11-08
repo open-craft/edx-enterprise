@@ -109,7 +109,7 @@ class LearnerExporter(Exporter):
 
             if course_details is None:
                 # Course not found, so we have nothing to report.
-                LOGGER.error("No course details found for enrollment %d: %s",
+                LOGGER.error("No course run details found for enrollment %d: %s",
                              enterprise_enrollment.pk, course_id)
                 continue
 
@@ -257,7 +257,7 @@ class LearnerExporter(Exporter):
             completed_date = now
             grade = self.grade_passing
 
-        # Otherwise, the course is still in-progress
+        # Otherwise, the course is still in progress
         else:
             completed_date = None
             grade = self.grade_incomplete

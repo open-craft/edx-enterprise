@@ -26,7 +26,7 @@ def transmit_course_metadata(username, channel_code, channel_pk):
     """
     api_user = User.objects.get(username=username)
     integrated_channel = INTEGRATED_CHANNEL_CHOICES[channel_code].objects.get(pk=channel_pk)
-    LOGGER.info('Processing courses for integrated channel using configuration: %s', integrated_channel)
+    LOGGER.info('Processing course runs for integrated channel using configuration: %s', integrated_channel)
     try:
         integrated_channel.transmit_course_data(api_user)
     except Exception:  # pylint: disable=broad-except

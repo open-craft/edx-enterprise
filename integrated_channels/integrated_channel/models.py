@@ -146,6 +146,9 @@ class LearnerDataTransmissionAudit(models.Model):
         Return a JSON-serialized representation.
 
         Sort the keys so the result is consistent and testable.
+
+        # TODO: When we refactor to use a serialization flow consistent with how course metadata
+        # is serialized, remove the serialization here and make the learner data exporter handle the work.
         """
         return json.dumps(self._payload_data(), sort_keys=True)
 

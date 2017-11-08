@@ -40,7 +40,7 @@ class CourseExporter(Exporter):
         self.courses = []
         client = EnterpriseApiClient(self.user)
         enterprise_course_runs = client.get_enterprise_course_runs(self.enterprise_customer)
-        LOGGER.info('Retrieving course list for enterprise %s', self.enterprise_customer.name)
+        LOGGER.info('Retrieving course run list for enterprise %s', self.enterprise_customer.name)
         for course_run in enterprise_course_runs.values():
             self.add_course_run(course_run)
 
@@ -65,7 +65,7 @@ class CourseExporter(Exporter):
         """
         transformed = self.transform(course_run)
         LOGGER.info(
-            'Sending course with plugin configuration %s: %s',
+            'Sending course run with plugin configuration %s: %s',
             self.enterprise_configuration,
             json.dumps(transformed, indent=4),
         )
@@ -75,8 +75,8 @@ class CourseExporter(Exporter):
         """
         Parse the provided course into the format natively supported by the provider.
         """
-        LOGGER.info('Processing course with ID %s', course_run['key'])
-        LOGGER.debug('Parsing course for %s: %s', self.enterprise_customer, json.dumps(course_run, indent=4))
+        LOGGER.info('Processing course run with ID %s', course_run['key'])
+        LOGGER.debug('Parsing course run for %s: %s', self.enterprise_customer, json.dumps(course_run, indent=4))
 
         # Add the enterprise customer to the course run details so it can be used in the data transform
         course_run['enterprise_customer'] = self.enterprise_customer

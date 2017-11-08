@@ -90,8 +90,8 @@ class DegreedCourseExporter(CourseExporter):  # pylint: disable=abstract-method
         The transmitter will do a check itself to see enrollability, and properly ``DELETE``
         the course.
         """
-        LOGGER.info('Processing course with ID %s', course_run['key'])
-        LOGGER.debug('Parsing course for %s: %s', self.enterprise_customer, json.dumps(course_run, indent=4))
+        LOGGER.info('Processing course run with ID %s', course_run['key'])
+        LOGGER.debug('Parsing course run for %s: %s', self.enterprise_customer, json.dumps(course_run, indent=4))
 
         # Add the enterprise customer to the course run details so it can be used in the data transform
         course_run['enterprise_customer'] = self.enterprise_customer

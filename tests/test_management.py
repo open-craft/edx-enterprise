@@ -140,15 +140,15 @@ class TestTransmitCoursewareDataManagementCommand(unittest.TestCase, EnterpriseM
         # Verify that first integrated channel logs failure but the second
         # integrated channel still successfully transmits courseware data.
         expected_messages = [
-            'Processing courses for integrated channel using configuration: '
+            'Processing course runs for integrated channel using configuration: '
             '<SAPSuccessFactorsEnterpriseCustomerConfiguration for Enterprise Veridian Dynamics>',
             'Transmission of course metadata failed for user "C-3PO" and for integrated channel with '
             'code "SAP" and id "1".',
-            'Processing courses for integrated channel using configuration: '
+            'Processing course runs for integrated channel using configuration: '
             '<SAPSuccessFactorsEnterpriseCustomerConfiguration for Enterprise Dummy Enterprise>',
-            'Retrieving course list for enterprise {}'.format(dummy_enterprise_customer.name),
-            'Processing course with ID {}'.format(course_run_id_for_success),
-            'Sending course with plugin configuration <SAPSuccessFactorsEnterprise'
+            'Retrieving course run list for enterprise {}'.format(dummy_enterprise_customer.name),
+            'Processing course run with ID {}'.format(course_run_id_for_success),
+            'Sending course run with plugin configuration <SAPSuccessFactorsEnterprise'
             'CustomerConfiguration for Enterprise Dummy Enterprise>',
             expected_dump,
         ]
@@ -206,14 +206,14 @@ class TestTransmitCoursewareDataManagementCommand(unittest.TestCase, EnterpriseM
             '"title": [{"locale": "English", "value": "edX Demonstration Course"}]}]}'
         )
         expected_messages = [
-            'Processing courses for integrated channel using configuration: '
+            'Processing course runs for integrated channel using configuration: '
             '<SAPSuccessFactorsEnterpriseCustomerConfiguration for Enterprise Veridian Dynamics>',
-            'Retrieving course list for enterprise {}'.format(self.enterprise_customer.name),
-            'Processing course with ID {}'.format(course_run_ids[0]),
-            'Sending course with plugin configuration <SAPSuccessFactorsEnterprise'
+            'Retrieving course run list for enterprise {}'.format(self.enterprise_customer.name),
+            'Processing course run with ID {}'.format(course_run_ids[0]),
+            'Sending course run with plugin configuration <SAPSuccessFactorsEnterprise'
             'CustomerConfiguration for Enterprise Veridian Dynamics>',
-            'Processing course with ID {}'.format(course_run_ids[1]),
-            'Sending course with plugin configuration <SAPSuccessFactorsEnterprise'
+            'Processing course run with ID {}'.format(course_run_ids[1]),
+            'Sending course run with plugin configuration <SAPSuccessFactorsEnterprise'
             'CustomerConfiguration for Enterprise Veridian Dynamics>',
             expected_dump,
         ]
