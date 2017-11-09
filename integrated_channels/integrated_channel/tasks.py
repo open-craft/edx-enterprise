@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 LOGGER = get_task_logger(__name__)
 
 
-@task
+@task()
 def transmit_course_metadata(username, channel_code, channel_pk):
     """
     Task to send course metadata to each linked integrated channel.
@@ -41,7 +41,7 @@ def transmit_course_metadata(username, channel_code, channel_pk):
         LOGGER.exception(exception_message)
 
 
-@task
+@task()
 def transmit_learner_data(username, channel_code, channel_pk):
     """
     Task to send learner data to each linked integrated channel.
