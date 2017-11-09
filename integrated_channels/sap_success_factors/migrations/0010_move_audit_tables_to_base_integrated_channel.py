@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     database_operations = [
-        # This table literally just moves apps, so just rename it to prefix it with `integrated_channel_`.
+        # We just move this table to the "integrated_channel" app, so rename it to prefix it with "integrated_channel".
         migrations.AlterModelTable('CatalogTransmissionAudit', 'integrated_channel_catalogtransmissionaudit'),
     ]
 

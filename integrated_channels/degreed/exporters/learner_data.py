@@ -18,7 +18,7 @@ LOGGER = getLogger(__name__)
 
 class DegreedLearnerExporter(LearnerExporter):
     """
-    Base class for exporting learner completion data to integrated channels.
+    Class to provide a Degreed learner data transmission audit prepared for serialization.
     """
 
     def get_learner_data_record(

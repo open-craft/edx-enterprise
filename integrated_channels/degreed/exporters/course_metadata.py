@@ -19,7 +19,7 @@ LOGGER = getLogger(__name__)
 
 class DegreedCourseExporter(CourseExporter):  # pylint: disable=abstract-method
     """
-    Class to provide data transforms for Degreed course export task.
+    Class to provide data transforms for Degreed course metadata export task.
     """
 
     CHUNK_PAGE_LENGTH = 1000

@@ -24,7 +24,7 @@ COURSE_URL_SCHEME = os.environ.get('SUCCESSFACTORS_COURSE_EXPORT_DEFAULT_URL_SCH
 
 class SapSuccessFactorsCourseExporter(CourseExporter):  # pylint: disable=abstract-method
     """
-    Class to provide data transforms for SAP SuccessFactors course export task.
+    Class to provide data transforms for SAP SuccessFactors course metadata export task.
     """
 
     CHUNK_PAGE_LENGTH = 1000
@@ -141,6 +141,10 @@ class SapSuccessFactorsCourseExporter(CourseExporter):  # pylint: disable=abstra
     def transform_content(self, course_run):
         """
         Return the transformed version of the course content.
+
+        Note that this is not actually course *content* per say, but rather just metadata.
+        SAPSF expects the "content" key for this metadata, however, so we name the function
+        "transform_content" for consistency.
         """
         return [{
             'providerID': self.enterprise_configuration.provider_id,
@@ -209,7 +213,7 @@ class SapSuccessFactorsCourseExporter(CourseExporter):  # pylint: disable=abstra
                 }
 
         for course_key, summary in previous_audit_summary.items():
-            # Add a course payload to self.courses so that courses no longer in the catalog are marked inactive.
+            # Add a course payload to new_courses so that courses no longer in the catalog are marked inactive.
             if summary['status'] == self.STATUS_ACTIVE and summary['in_catalog']:
                 new_courses.append(self.get_course_metadata_for_inactivation(
                     course_key,

@@ -144,9 +144,13 @@ class SapSuccessFactorsLearnerDataTransmissionAudit(models.Model):
     enterprise_course_enrollment_id = models.PositiveIntegerField(blank=False, null=False)
     course_id = models.CharField(max_length=255, blank=False, null=False)
     course_completed = models.BooleanField(default=True)
-    completed_timestamp = models.BigIntegerField()
     instructor_name = models.CharField(max_length=255, blank=True)
     grade = models.CharField(max_length=100, blank=False, null=False)
+
+    # We send a UNIX timestamp to SAPSF.
+    completed_timestamp = models.BigIntegerField()
+
+    # Request-related information.
     status = models.CharField(max_length=100, blank=False, null=False)
     error_message = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -159,10 +163,10 @@ class SapSuccessFactorsLearnerDataTransmissionAudit(models.Model):
         Return a human-readable string representation of the object.
         """
         return (
-            '<SapSuccessFactorsLearnerDataTransmissionAudit {transmission_id} for enterprise enrollment {enrollment}, '
-            'SAPSF user {sapsf_user_id}, and course {course_id}>'.format(
+            '<SapSuccessFactorsLearnerDataTransmissionAudit {transmission_id} for enterprise enrollment '
+            '{enterprise_course_enrollment_id}, SAPSF user {sapsf_user_id}, and course {course_id}>'.format(
                 transmission_id=self.id,
-                enrollment=self.enterprise_course_enrollment_id,
+                enterprise_course_enrollment_id=self.enterprise_course_enrollment_id,
                 sapsf_user_id=self.sapsf_user_id,
                 course_id=self.course_id
             )

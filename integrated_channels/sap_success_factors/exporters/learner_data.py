@@ -18,14 +18,14 @@ LOGGER = getLogger(__name__)
 
 class SapSuccessFactorsLearnerExporter(LearnerExporter):
     """
-    Base class for exporting learner completion data to integrated channels.
+    Class to provide a SAPSF learner data transmission audit prepared for serialization.
     """
 
     def get_learner_data_record(self, enterprise_enrollment, completed_date=None, grade=None, is_passing=False):
         """
         Return a SapSuccessFactorsLearnerDataTransmissionAudit with the given enrollment and course completion data.
 
-        If completed_date is None, then course completion has not been met.
+        If completed_date is None and the learner isn't passing, then course completion has not been met.
 
         If no remote ID can be found, return None.
         """
