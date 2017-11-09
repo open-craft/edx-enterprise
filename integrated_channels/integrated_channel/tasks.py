@@ -4,7 +4,7 @@ Celery tasks for integrated channel management commands.
 
 from __future__ import absolute_import, unicode_literals
 
-from celery.task import task
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from integrated_channels.integrated_channel.management.commands import INTEGRATED_CHANNEL_CHOICES
 
@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 LOGGER = get_task_logger(__name__)
 
 
-@task()
+@shared_task
 def transmit_course_metadata(username, channel_code, channel_pk):
     """
     Task to send course metadata to each linked integrated channel.
@@ -41,7 +41,7 @@ def transmit_course_metadata(username, channel_code, channel_pk):
         LOGGER.exception(exception_message)
 
 
-@task()
+@shared_task
 def transmit_learner_data(username, channel_code, channel_pk):
     """
     Task to send learner data to each linked integrated channel.
