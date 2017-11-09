@@ -4,7 +4,7 @@ Celery tasks for integrated channel management commands.
 
 from __future__ import absolute_import, unicode_literals
 
-from celery import task
+from celery.task import task
 from celery.utils.log import get_task_logger
 from integrated_channels.integrated_channel.management.commands import INTEGRATED_CHANNEL_CHOICES
 
