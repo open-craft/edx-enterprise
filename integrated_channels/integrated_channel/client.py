@@ -12,16 +12,16 @@ class IntegratedChannelApiClient(object):
 
     The interface contains the following method(s):
 
-    send_completion_status(user_id, payload)
+    create_course_completion(user_id, payload)
         Makes a POST request to the integrated channel's completion API for the given user with information
         available in the payload.
 
-    send_course_import(payload):
+    create_course_content(payload):
         Make a POST request to the integrated channel's course content API with course metadata available
         in the payload.
     """
 
-    def send_completion_status(self, user_id, payload):
+    def create_course_completion(self, user_id, payload):
         """
         Make a POST request to the integrated channel's completion API to update completion status for a user.
 
@@ -30,7 +30,7 @@ class IntegratedChannelApiClient(object):
         """
         raise NotImplementedError('Implement in concrete subclass.')
 
-    def send_course_import(self, payload):
+    def create_course_content(self, payload):
         """
         Make a POST request to the integrated channel's course content API to update course metadata.
 

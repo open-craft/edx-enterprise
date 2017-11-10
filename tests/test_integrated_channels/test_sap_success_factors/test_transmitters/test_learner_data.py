@@ -60,7 +60,7 @@ class TestSuccessFactorsLearnerDataTransmitter(unittest.TestCase):
         self.addCleanup(get_oauth_access_token_mock.stop)
 
         send_completion_status_mock = mock.patch(
-            'integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.send_completion_status'
+            'integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.create_course_completion'
         )
         self.send_completion_status_mock = send_completion_status_mock.start()
         self.addCleanup(send_completion_status_mock.stop)

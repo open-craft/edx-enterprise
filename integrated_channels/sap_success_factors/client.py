@@ -8,11 +8,12 @@ import datetime
 import time
 
 import requests
+from integrated_channels.integrated_channel.client import IntegratedChannelApiClient
 
 from django.apps import apps
 
 
-class SAPSuccessFactorsAPIClient(object):
+class SAPSuccessFactorsAPIClient(IntegratedChannelApiClient):
     """
     Client for connecting to SAP SuccessFactors.
 
@@ -109,12 +110,12 @@ class SAPSuccessFactorsAPIClient(object):
         self.session = session
         self.expires_at = expires_at
 
-    def send_completion_status(self, sap_user_id, payload):
+    def create_course_completion(self, user_id, payload):
         """
         Send a completion status payload to the SuccessFactors OCN Completion Status endpoint
 
         Args:
-            sap_user_id (str): The sap user id that the completion status is being sent for.
+            user_id (str): The sap user id that the completion status is being sent for.
             payload (str): JSON encoded object (serialized from SapSuccessFactorsLearnerDataTransmissionAudit)
                 containing completion status fields per SuccessFactors documentation.
 
@@ -124,9 +125,9 @@ class SAPSuccessFactorsAPIClient(object):
             HTTPError: if we received a failure response code from SAP SuccessFactors
         """
         url = self.enterprise_configuration.sapsf_base_url + self.global_sap_config.completion_status_api_path
-        return self._call_post_with_user_override(sap_user_id, url, payload)
+        return self._call_post_with_user_override(user_id, url, payload)
 
-    def send_course_import(self, payload):
+    def create_course_content(self, payload):
         """
         Send courses payload to the SuccessFactors OCN Course Import endpoint
 

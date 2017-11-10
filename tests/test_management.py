@@ -85,7 +85,7 @@ class TestTransmitCoursewareDataManagementCommand(unittest.TestCase, EnterpriseM
     @responses.activate
     @mock.patch('enterprise.api_client.lms.JwtBuilder', mock.Mock())
     @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.get_oauth_access_token')
-    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.send_course_import')
+    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.create_course_content')
     def test_transmit_course_metadata_task_with_error(
             self,
             send_course_import_mock,
@@ -161,7 +161,7 @@ class TestTransmitCoursewareDataManagementCommand(unittest.TestCase, EnterpriseM
     @responses.activate
     @mock.patch('enterprise.api_client.lms.JwtBuilder', mock.Mock())
     @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.get_oauth_access_token')
-    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.send_course_import')
+    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.create_course_content')
     def test_transmit_course_metadata_task_success(
             self,
             send_course_import_mock,
@@ -544,7 +544,7 @@ class TestLearnerDataTransmitIntegration(unittest.TestCase):
     )
     @ddt.unpack
     @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.get_oauth_access_token')
-    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.send_completion_status')
+    @mock.patch('integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.create_course_completion')
     def test_transmit_learner_data(
             self,
             command_kwargs,

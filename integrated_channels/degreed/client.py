@@ -9,13 +9,14 @@ import datetime
 import time
 
 import requests
+from integrated_channels.integrated_channel.client import IntegratedChannelApiClient
 
 from django.apps import apps
 
 from six.moves.urllib.parse import urljoin  # pylint: disable=import-error
 
 
-class DegreedAPIClient(object):
+class DegreedAPIClient(IntegratedChannelApiClient):
     """
     Client for connecting to Degreed.
 
@@ -47,7 +48,7 @@ class DegreedAPIClient(object):
         self.session = None
         self.expires_at = None
 
-    def send_completion_status(self, payload):
+    def create_course_completion(self, payload):  # pylint: disable=arguments-differ
         """
         Send a completion status payload to the Degreed Completion Status endpoint
 
@@ -66,7 +67,7 @@ class DegreedAPIClient(object):
             self.COMPLETION_PROVIDER_SCOPE
         )
 
-    def delete_completion_status(self, payload):
+    def delete_course_completion(self, payload):
         """
         Delete a completion status previously sent to the Degreed Completion Status endpoint
 
@@ -85,7 +86,7 @@ class DegreedAPIClient(object):
             self.COMPLETION_PROVIDER_SCOPE
         )
 
-    def send_course_import(self, payload):
+    def create_course_content(self, payload):
         """
         Send courses payload to the Degreed Course Content endpoint.
 
@@ -103,7 +104,7 @@ class DegreedAPIClient(object):
             self.CONTENT_PROVIDER_SCOPE
         )
 
-    def delete_course_import(self, payload):
+    def delete_course_content(self, payload):
         """
         Delete a course in the upstream Degreed Course Catalog.
 

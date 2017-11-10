@@ -91,9 +91,9 @@ class CourseTransmitter(Transmitter):
         LOGGER.info(course_metadata)
 
         if method == 'POST':
-            method = self.client.send_course_import
+            method = self.client.create_course_content
         elif method == 'DELETE':
-            method = self.client.delete_course_import
+            method = self.client.delete_course_content
         else:
             raise ValueError('Invalid method provided for the transmission of this course block: {}'.format(method))
 

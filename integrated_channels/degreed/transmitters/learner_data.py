@@ -65,7 +65,7 @@ class DegreedLearnerTransmitter(LearnerTransmitter):
                 return None
 
             try:
-                code, body = self.client.send_completion_status(learner_data.degreed_user_id, serialized_payload)
+                code, body = self.client.create_course_completion(learner_data.degreed_user_id, serialized_payload)
                 LOGGER.debug('Successfully sent completion status call for enterprise enrollment {} with payload {}'.
                              format(enterprise_enrollment_id, serialized_payload))
             except RequestException as request_exception:

@@ -142,7 +142,7 @@ class TestSAPSuccessFactorsAPIClient(unittest.TestCase):
         expected_response = 200, json.dumps(expected_response_body)
 
         sap_client = SAPSuccessFactorsAPIClient(self.enterprise_config)
-        actual_response = sap_client.send_completion_status(self.user_type, json.dumps(payload))
+        actual_response = sap_client.create_course_completion(self.user_type, json.dumps(payload))
         assert actual_response == expected_response
         assert len(responses.calls) == 3  # pylint: disable=no-member
         assert responses.calls[0].request.url == self.url_base + self.oauth_api_path  # pylint: disable=no-member
@@ -188,7 +188,7 @@ class TestSAPSuccessFactorsAPIClient(unittest.TestCase):
         expected_response = 200, json.dumps(expected_course_response_body)
 
         sap_client = SAPSuccessFactorsAPIClient(self.enterprise_config)
-        actual_response = sap_client.send_course_import(payload)
+        actual_response = sap_client.create_course_content(payload)
         assert actual_response == expected_response
         assert len(responses.calls) == 2  # pylint: disable=no-member
         assert responses.calls[0].request.url == self.url_base + self.oauth_api_path  # pylint: disable=no-member
@@ -240,7 +240,7 @@ class TestSAPSuccessFactorsAPIClient(unittest.TestCase):
         expected_response = 200, json.dumps(expected_course_response_body)
 
         sap_client = SAPSuccessFactorsAPIClient(self.enterprise_config)
-        actual_response = sap_client.send_course_import(payload)
+        actual_response = sap_client.create_course_content(payload)
         assert actual_response == expected_response
         assert len(responses.calls) == 3  # pylint: disable=no-member
         assert responses.calls[0].request.url == self.url_base + self.oauth_api_path  # pylint: disable=no-member

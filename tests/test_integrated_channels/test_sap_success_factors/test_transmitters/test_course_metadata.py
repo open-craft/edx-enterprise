@@ -59,7 +59,7 @@ class TestSuccessFactorsCourseTransmitter(unittest.TestCase):
         self.addCleanup(get_oauth_access_token_mock.stop)
 
         send_course_import_mock = mock.patch(
-            'integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.send_course_import'
+            'integrated_channels.sap_success_factors.client.SAPSuccessFactorsAPIClient.create_course_content'
         )
         self.send_course_import_mock = send_course_import_mock.start()
         self.addCleanup(send_course_import_mock.stop)
