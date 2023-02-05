@@ -320,8 +320,20 @@ class EnterpriseCourseEnrollmentReadOnlySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EnterpriseCourseEnrollment
         fields = (
-            'enterprise_customer_user', 'course_id'
+            'enterprise_customer_user',
+            'course_id',
+            'enrollment_date',
+            'enrollment_track',
+            'user_email',
+            'course_start',
+            'course_end',
         )
+
+    enrollment_track = serializers.CharField()
+    enrollment_date = serializers.DateTimeField()
+    user_email = serializers.EmailField()
+    course_start = serializers.DateTimeField()
+    course_end = serializers.DateTimeField()
 
 
 class EnterpriseCourseEnrollmentWriteSerializer(serializers.ModelSerializer):
