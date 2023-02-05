@@ -24,6 +24,8 @@ from enterprise.models import (
     EnterpriseCustomerInviteKey,
     EnterpriseCustomerReportingConfiguration,
     EnterpriseCustomerUser,
+    EnterpriseFeatureRole,
+    EnterpriseFeatureUserRoleAssignment,
     LearnerCreditEnterpriseCourseEnrollment,
     LicensedEnterpriseCourseEnrollment,
     PendingEnrollment,
@@ -263,6 +265,41 @@ class UserFactory(factory.django.DjangoModelFactory):
     is_staff = False
     is_active = False
     date_joined = factory.LazyAttribute(lambda x: FAKER.date_time_this_year(tzinfo=timezone.utc))
+
+
+class EnterpriseFeatureRoleFactory(factory.django.DjangoModelFactory):
+    """
+    EnterpriseFeatureRole factory.
+
+    Creates an instance of EnterpriseFeatureRole with minimal boilerplate.
+    """
+
+    class Meta:
+        """
+        Meta for EnterpriseFeatureRoleFactory.
+        """
+
+        model = EnterpriseFeatureRole
+
+    name = factory.LazyAttribute(lambda x: FAKER.word())
+
+
+class EnterpriseFeatureUserRoleAssignmentFactory(factory.django.DjangoModelFactory):
+    """
+    EnterpriseFeatureUserRoleAssignment factory.
+
+    Creates an instance of EnterpriseFeatureUserRoleAssignment with minimal boilerplate.
+    """
+
+    class Meta:
+        """
+        Meta for EnterpriseFeatureUserRoleAssignmentFactory.
+        """
+
+        model = EnterpriseFeatureUserRoleAssignment
+
+    role = factory.SubFactory(EnterpriseFeatureRoleFactory)
+    user = factory.SubFactory(UserFactory)
 
 
 class AnonymousUserFactory(factory.Factory):
