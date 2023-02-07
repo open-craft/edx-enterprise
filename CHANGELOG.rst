@@ -16,6 +16,11 @@ Change Log
 Unreleased
 ----------
 * nothing
+[3.61.5]
+--------
+feat: allow enrollment api admin to see all enrollments
+feat: extend EnterpriseCourseEnrollmentReadOnlySerializer
+
 
 [3.42.5]
 ---------
