@@ -41,6 +41,7 @@ from django.utils.translation import gettext as _
 
 from enterprise import models
 from enterprise.api.filters import (
+    EnterpriseCourseEnrollmentFilterBackend,
     EnterpriseCustomerInviteKeyFilterBackend,
     EnterpriseCustomerUserFilterBackend,
     EnterpriseLinkedUserFilterBackend,
@@ -457,6 +458,7 @@ class EnterpriseCourseEnrollmentViewSet(EnterpriseReadWriteModelViewSet):
     """
 
     queryset = models.EnterpriseCourseEnrollment.objects.all()
+    filter_backends = (filters.OrderingFilter, DjangoFilterBackend, EnterpriseCourseEnrollmentFilterBackend)
 
     USER_ID_FILTER = 'enterprise_customer_user__user_id'
     FIELDS = (

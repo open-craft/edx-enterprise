@@ -17,6 +17,11 @@ Unreleased
 ----------
 * nothing
 
+[3.42.6]
+--------
+feat: allow enrollment api admin to see all enrollments
+feat: extend EnterpriseCourseEnrollmentReadOnlySerializer
+
 [3.42.5]
 ---------
 fix: improve guards on fk data backfill job

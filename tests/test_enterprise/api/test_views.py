@@ -1223,6 +1223,11 @@ class TestEnterpriseCustomerViewSet(BaseTestEnterpriseAPIViews):
             [{
                 'enterprise_customer_user': 1,
                 'course_id': 'course-v1:edX+DemoX+DemoCourse',
+                'enrollment_date': None,
+                'enrollment_track': None,
+                'user_email': None,
+                'course_start': None,
+                'course_end': None,
             }],
         ),
         (
