@@ -78,6 +78,7 @@ try:
     from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
 except ImportError:
     CourseEnrollment = None
+    CourseEnrollmentAllowed = None
 
 try:
     from openedx.core.djangoapps.content.course_overviews.models import CourseOverview

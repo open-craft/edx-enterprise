@@ -67,7 +67,8 @@ from test_utils import (
 )
 from test_utils.decorators import mock_api_response
 from test_utils.factories import FAKER, PendingEnterpriseCustomerUserFactory
-from test_utils.fake_enrollment_api import get_course_details, get_default_branding_object
+from test_utils.fake_enrollment_api import get_course_details
+from test_utils.fake_enterprise_api import get_default_branding_object
 
 fake = Faker()
 
@@ -3612,12 +3613,12 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
                     },
                     {
                         'email': 'abc@test.com',
-                        'course_run_key': 'course-v2:edX+DemoX+Second_Demo_Course',
+                        'course_run_key': 'course-v1:HarvardX+CoolScience+2016',
                         'license_uuid': '5a88bdcade7c4ecb838f8111b68e18ac'
                     },
                     {
                         'email': 'xyz@test.com',
-                        'course_run_key': 'course-v2:edX+DemoX+Second_Demo_Course',
+                        'course_run_key': 'course-v1:HarvardX+CoolScience+2016',
                         'license_uuid': '2c58acdade7c4ede838f7111b42e18ac'
                     },
                 ]
