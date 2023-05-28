@@ -19,10 +19,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from enterprise import utils
-from enterprise.admin.utils import (
-    email_or_username__to__email,
-    split_usernames_and_emails,
-)
+from enterprise.admin.utils import email_or_username__to__email, split_usernames_and_emails
 from enterprise.admin.widgets import SubmitInput
 from enterprise.models import (
     AdminNotification,
@@ -37,9 +34,7 @@ from enterprise.models import (
 from enterprise.utils import ValidationMessages, validate_email_to_link
 
 try:
-    from common.djangoapps.third_party_auth.models import (
-        SAMLProviderConfig as saml_provider_configuration,
-    )
+    from common.djangoapps.third_party_auth.models import SAMLProviderConfig as saml_provider_configuration
 except ImportError:
     saml_provider_configuration = None
 
@@ -51,11 +46,10 @@ class ManageLearnersForm(forms.Form):
     """
     Form to manage learner additions.
     """
-
     email_or_username = forms.CharField(
-        label=_("To add a single learner, enter an email address or username."),
-        required=False,
-    )
+        label=_(
+            "To add a single learner, enter an email address or username."),
+        required=False)
     bulk_upload_csv = forms.FileField(
         label=_(
             "To add multiple learners, upload a .csv file that contains a "
@@ -67,25 +61,15 @@ class ManageLearnersForm(forms.Form):
             "by the heading 'email' in the first row. Optionally, the .csv file may contain "
             "a column of course run keys, indicated by the heading 'course_id' in the first row, to "
             "enroll learners in multiple courses."
-        ),
+        )
     )
     course = forms.CharField(
-        label=_("Enroll these learners in this course"),
-        required=False,
+        label=_("Enroll these learners in this course"), required=False,
         help_text=_("To enroll learners in a course, enter a course ID."),
     )
-    force_enrollment = forms.BooleanField(
-        label=_("Force Enrollment"),
-        help_text=_(
-            "The selected course is 'Invite Only'. Only staff can enroll learners to this course."
-        ),
-        required=False,
-    )
     course_mode = forms.ChoiceField(
-        label=_("Course enrollment track"),
-        required=False,
-        choices=BLANK_CHOICE_DASH
-        + [
+        label=_("Course enrollment track"), required=False,
+        choices=BLANK_CHOICE_DASH + [
             ("audit", _("Audit")),
             ("verified", _("Verified")),
             ("professional", _("Professional Education")),
@@ -95,27 +79,22 @@ class ManageLearnersForm(forms.Form):
         ],
     )
     reason = forms.CharField(label=_("Reason for manual enrollment"), required=False)
-    sales_force_id = forms.CharField(
-        label=_("Salesforce Opportunity ID"), required=False
-    )
+    sales_force_id = forms.CharField(label=_("Salesforce Opportunity ID"), required=False)
     discount = forms.DecimalField(
         label=_("Discount percentage for manual enrollment"),
         help_text=_("Discount percentage should be from 0 to 100"),
         required=True,
         decimal_places=5,
-        initial=0.0,
+        initial=0.0
     )
 
     class NotificationTypes:
         """
         Namespace class for notification types
         """
-
-        BY_EMAIL = "by_email"
-        NO_NOTIFICATION = "do_not_notify"
-        DEFAULT = getattr(
-            settings, "DEFAULT_ENTERPRISE_NOTIFICATION_MECHANISM", BY_EMAIL
-        )
+        BY_EMAIL = 'by_email'
+        NO_NOTIFICATION = 'do_not_notify'
+        DEFAULT = getattr(settings, 'DEFAULT_ENTERPRISE_NOTIFICATION_MECHANISM', BY_EMAIL)
 
     notify_on_enrollment = forms.ChoiceField(
         label=_("Notify learners of enrollment"),
@@ -131,7 +110,6 @@ class ManageLearnersForm(forms.Form):
         """
         Namespace class for form modes.
         """
-
         MODE_SINGULAR = "singular"
         MODE_BULK = "bulk"
 
@@ -139,7 +117,6 @@ class ManageLearnersForm(forms.Form):
         """
         Namespace class for field names.
         """
-
         GENERAL_ERRORS = forms.forms.NON_FIELD_ERRORS
 
         EMAIL_OR_USERNAME = "email_or_username"
@@ -151,13 +128,11 @@ class ManageLearnersForm(forms.Form):
         REASON = "reason"
         SALES_FORCE_ID = "sales_force_id"
         DISCOUNT = "discount"
-        FORCE_ENROLLMENT = "force_enrollment"
 
     class CsvColumns:
         """
         Namespace class for CSV column names.
         """
-
         EMAIL = "email"
         COURSE_ID = "course_id"
 
@@ -170,9 +145,9 @@ class ManageLearnersForm(forms.Form):
             user (django.contrib.auth.models.User): current user
             enterprise_customer (enterprise.models.EnterpriseCustomer): current customer
         """
-        user = kwargs.pop("user", None)
+        user = kwargs.pop('user', None)
         self._user = user
-        self._enterprise_customer = kwargs.pop("enterprise_customer", None)
+        self._enterprise_customer = kwargs.pop('enterprise_customer', None)
         super().__init__(*args, **kwargs)
 
     def clean_email_or_username(self):
@@ -227,12 +202,8 @@ class ManageLearnersForm(forms.Form):
         course_id = self.cleaned_data[self.Fields.COURSE].strip()
         if not course_id:
             return None
-        enterprise_customer = utils.get_enterprise_customer(
-            self._enterprise_customer.uuid
-        )
-        course_details = utils.validate_course_exists_for_enterprise(
-            enterprise_customer, course_id
-        )
+        enterprise_customer = utils.get_enterprise_customer(self._enterprise_customer.uuid)
+        course_details = utils.validate_course_exists_for_enterprise(enterprise_customer, course_id)
         return course_details
 
     def clean_reason(self):
@@ -289,15 +260,11 @@ class ManageLearnersForm(forms.Form):
         bulk_upload_csv = self.cleaned_data.get(self.Fields.BULK_UPLOAD)
         if bulk_upload_csv:
             bulk_csv_contents = bulk_upload_csv.read()
-            csv_column_names = (
-                bulk_csv_contents.decode("utf-8").split("\n", 1)[0].split(",")
-            )
+            csv_column_names = bulk_csv_contents.decode('utf-8').split('\n', 1)[0].split(',')
             if self.CsvColumns.COURSE_ID in csv_column_names:
                 # course id column exists in csv, so validate conditionally required fields
                 if self.cleaned_data.get(self.Fields.COURSE):
-                    raise ValidationError(
-                        ValidationMessages.BOTH_COURSE_FIELDS_SPECIFIED
-                    )
+                    raise ValidationError(ValidationMessages.BOTH_COURSE_FIELDS_SPECIFIED)
                 if not self.cleaned_data.get(self.Fields.COURSE_MODE):
                     raise ValidationError(ValidationMessages.COURSE_WITHOUT_COURSE_MODE)
                 if not self.cleaned_data.get(self.Fields.REASON):
@@ -315,12 +282,10 @@ class ManageLearnersForm(forms.Form):
                 raise ValidationError(ValidationMessages.COURSE_WITHOUT_COURSE_MODE)
             valid_course_modes = course_details["course_modes"]
             if all(course_mode != mode["slug"] for mode in valid_course_modes):
-                error = ValidationError(
-                    ValidationMessages.COURSE_MODE_INVALID_FOR_COURSE.format(
-                        course_mode=course_mode,
-                        course_id=course_details["course_id"],
-                    )
-                )
+                error = ValidationError(ValidationMessages.COURSE_MODE_INVALID_FOR_COURSE.format(
+                    course_mode=course_mode,
+                    course_id=course_details["course_id"],
+                ))
                 raise ValidationError({self.Fields.COURSE_MODE: error})
 
     def _validate_reason(self):
@@ -339,11 +304,10 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
     """
     Form to request DSC from a learner.
     """
-
     email_or_username = forms.CharField(
         label=_("Email/Username"),
         help_text=_("Enter an email address or username."),
-        required=True,
+        required=True
     )
     course = forms.CharField(
         label=_("Course"),
@@ -355,7 +319,6 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
         """
         Namespace class for field names.
         """
-
         EMAIL_OR_USERNAME = "email_or_username"
         COURSE = "course"
 
@@ -366,7 +329,7 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
         Arguments:
             enterprise_customer (enterprise.models.EnterpriseCustomer): current customer
         """
-        self._enterprise_customer = kwargs.pop("enterprise_customer", None)
+        self._enterprise_customer = kwargs.pop('enterprise_customer', None)
         super().__init__(*args, **kwargs)
 
     def clean_course(self):
@@ -376,9 +339,7 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
         course_id = self.cleaned_data[self.Fields.COURSE].strip()
         if not course_id:
             return None
-        enterprise_customer = utils.get_enterprise_customer(
-            self._enterprise_customer.uuid
-        )
+        enterprise_customer = utils.get_enterprise_customer(self._enterprise_customer.uuid)
         utils.validate_course_exists_for_enterprise(enterprise_customer, course_id)
         return course_id
 
@@ -401,9 +362,7 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
         """
         Check whether course exists in enterprise customer catalog.
         """
-        enterprise_customer = utils.get_enterprise_customer(
-            self._enterprise_customer.uuid
-        )
+        enterprise_customer = utils.get_enterprise_customer(self._enterprise_customer.uuid)
         return enterprise_customer.catalog_contains_course(course_id)
 
     def is_user_linked(self, email):
@@ -411,16 +370,13 @@ class ManageLearnersDataSharingConsentForm(forms.Form):
         Check whether user is linked to the enterprise customer or not.
         """
         user = User.objects.get(email=email)
-        return utils.get_enterprise_customer_user(
-            user.id, self._enterprise_customer.uuid
-        )
+        return utils.get_enterprise_customer_user(user.id, self._enterprise_customer.uuid)
 
 
 class EnterpriseCustomerAdminForm(forms.ModelForm):
     """
     Alternate form for the EnterpriseCustomer admin page.
     """
-
     class Meta:
         model = EnterpriseCustomer
         fields = (
@@ -458,19 +414,14 @@ class EnterpriseCustomerAdminForm(forms.ModelForm):
 
 class EnterpriseCustomerCatalogAdminForm(forms.ModelForm):
     """
-    form for EnterpriseCustomerCatalogAdmin class.
+        form for EnterpriseCustomerCatalogAdmin class.
     """
-
     class Meta:
         model = EnterpriseCustomerCatalog
         fields = "__all__"
 
-    preview_button = forms.Field(
-        required=False,
-        label="Actions",
-        widget=SubmitInput(attrs={"value": _("Preview")}),
-        help_text=_("Hold Ctrl when clicking on button to open Preview in new tab"),
-    )
+    preview_button = forms.Field(required=False, label='Actions', widget=SubmitInput(attrs={'value': _('Preview')}),
+                                 help_text=_("Hold Ctrl when clicking on button to open Preview in new tab"))
 
     @staticmethod
     def get_catalog_preview_uuid(post_data):
@@ -480,22 +431,16 @@ class EnterpriseCustomerCatalogAdminForm(forms.ModelForm):
 
         e.g: 'enterprise_customer_catalogs-0-preview_button'
         """
-        preview_button_expression = re.compile(
-            r"enterprise_customer_catalogs-\d+-preview_button"
-        )
-        clicked_button_index_expression = re.compile(r"-(.+?)-")
+        preview_button_expression = re.compile(r'enterprise_customer_catalogs-\d+-preview_button')
+        clicked_button_index_expression = re.compile(r'-(.+?)-')
         count = 0
         preview_button_index = None
         for key, _ in post_data.items():
             if preview_button_expression.match(key):
                 count += 1
-                preview_button_index = clicked_button_index_expression.search(
-                    key
-                ).group(1)
+                preview_button_index = clicked_button_index_expression.search(key).group(1)
         if count == 1:
-            return post_data.get(
-                "enterprise_customer_catalogs-" + preview_button_index + "-uuid"
-            )
+            return post_data.get('enterprise_customer_catalogs-' + preview_button_index + '-uuid')
         return None
 
 
@@ -506,7 +451,6 @@ class EnterpriseCustomerIdentityProviderAdminForm(forms.ModelForm):
     This form fetches identity providers from lms third_party_auth app.
     If third_party_auth app is not avilable it displays provider_id as a CharField.
     """
-
     class Meta:
         model = EnterpriseCustomerIdentityProvider
         fields = "__all__"
@@ -519,34 +463,28 @@ class EnterpriseCustomerIdentityProviderAdminForm(forms.ModelForm):
         """
         super().__init__(*args, **kwargs)
         idp_choices = utils.get_idp_choices()
-        help_text = ""
+        help_text = ''
         if saml_provider_configuration:
             provider_id = self.instance.provider_id
-            url = reverse(
-                "admin:{}_{}_add".format(
-                    saml_provider_configuration._meta.app_label,
-                    saml_provider_configuration._meta.model_name,
-                )
-            )
+            url = reverse('admin:{}_{}_add'.format(
+                saml_provider_configuration._meta.app_label,
+                saml_provider_configuration._meta.model_name))
             if provider_id:
                 identity_provider = utils.get_identity_provider(provider_id)
                 if identity_provider:
-                    update_url = url + "?source={}".format(identity_provider.pk)
-                    help_text = '<p><a href="{update_url}" target="_blank">View "{identity_provider}" details</a><p>'.format(
-                        update_url=update_url, identity_provider=identity_provider.name
-                    )
+                    update_url = url + '?source={}'.format(identity_provider.pk)
+                    help_text = '<p><a href="{update_url}" target="_blank">View "{identity_provider}" details</a><p>'.\
+                        format(update_url=update_url, identity_provider=identity_provider.name)
                 else:
                     help_text += '<p style="margin-top:-5px;"> Make sure you have added a valid provider_id.</p>'
             else:
-                help_text += (
-                    '<p style="margin-top:-5px;"><a target="_blank" href={add_url}>'
-                    "Create a new identity provider</a></p>".format(add_url=url)
-                )
+                help_text += '<p style="margin-top:-5px;"><a target="_blank" href={add_url}>' \
+                             'Create a new identity provider</a></p>'.format(add_url=url)
 
         if idp_choices is not None:
-            self.fields["provider_id"] = forms.TypedChoiceField(
+            self.fields['provider_id'] = forms.TypedChoiceField(
                 choices=idp_choices,
-                label=_("Identity Provider"),
+                label=_('Identity Provider'),
                 help_text=mark_safe(help_text),
             )
 
@@ -558,8 +496,8 @@ class EnterpriseCustomerIdentityProviderAdminForm(forms.ModelForm):
         """
         super().clean()
 
-        provider_id = self.cleaned_data.get("provider_id", None)
-        enterprise_customer = self.cleaned_data.get("enterprise_customer", None)
+        provider_id = self.cleaned_data.get('provider_id', None)
+        enterprise_customer = self.cleaned_data.get('enterprise_customer', None)
 
         if provider_id is None or enterprise_customer is None:
             # field validation for either provider_id or enterprise_customer has already raised
@@ -594,23 +532,17 @@ class EnterpriseCustomerIdentityProviderAdminForm(forms.ModelForm):
             )
 
         # There should be always one default provider in case an enterprise has multiple providers.
-        identity_provider_total_forms = int(
-            self.data.get("enterprise_customer_identity_providers-TOTAL_FORMS")
-        )
+        identity_provider_total_forms = int(self.data.get('enterprise_customer_identity_providers-TOTAL_FORMS'))
         default_provider_values = []
         for form_num in range(identity_provider_total_forms):
             default_provider_values.append(
-                self.data.get(
-                    "enterprise_customer_identity_providers-{}-default_provider".format(
-                        form_num
-                    )
-                )
+                self.data.get('enterprise_customer_identity_providers-{}-default_provider'.format(form_num))
             )
-        providers_marked_default = default_provider_values.count("on")
+        providers_marked_default = default_provider_values.count('on')
         if providers_marked_default > 1:
-            raise ValidationError("Please select only one default provider.")
+            raise ValidationError('Please select only one default provider.')
         if identity_provider_total_forms > 1 and providers_marked_default == 0:
-            raise ValidationError("Please select one default provider.")
+            raise ValidationError('Please select one default provider.')
 
 
 class EnterpriseCustomerReportingConfigAdminForm(forms.ModelForm):
@@ -620,7 +552,6 @@ class EnterpriseCustomerReportingConfigAdminForm(forms.ModelForm):
     This form uses the PasswordInput widget to obscure passwords as they are
     being entered by the user.
     """
-
     enterprise_customer_catalogs = forms.ModelMultipleChoiceField(
         EnterpriseCustomerCatalog.objects.all(),
         required=False,
@@ -651,8 +582,8 @@ class EnterpriseCustomerReportingConfigAdminForm(forms.ModelForm):
             "enterprise_customer_catalogs",
         )
         widgets = {
-            "decrypted_password": forms.widgets.PasswordInput(),
-            "decrypted_sftp_password": forms.widgets.PasswordInput(),
+            'decrypted_password': forms.widgets.PasswordInput(),
+            'decrypted_sftp_password': forms.widgets.PasswordInput(),
         }
 
     def clean(self):
@@ -660,47 +591,45 @@ class EnterpriseCustomerReportingConfigAdminForm(forms.ModelForm):
         Override of clean method to perform additional validation
         """
         cleaned_data = super().clean()
-        report_customer = cleaned_data.get("enterprise_customer")
-        data_type = cleaned_data.get("data_type")
+        report_customer = cleaned_data.get('enterprise_customer')
+        data_type = cleaned_data.get('data_type')
 
-        if (
-            data_type in EnterpriseCustomerReportingConfiguration.PEARSON_ONLY_REPORTS
-            and report_customer.name != "Pearson"
-        ):
+        if data_type in EnterpriseCustomerReportingConfiguration.PEARSON_ONLY_REPORTS \
+                and report_customer.name != 'Pearson':
             message = _(
                 'This data_type "{data_type}" is not supported for enterprise'
-                "customer {enterprise_customer}. Please select a different data_type.",
+                'customer {enterprise_customer}. Please select a different data_type.',
             ).format(
                 enterprise_customer=report_customer,
                 data_type=data_type,
             )
-            self.add_error("data_type", message)
+            self.add_error('data_type', message)
 
         # Check that any selected catalogs are tied to the selected enterprise.
         invalid_catalogs = [
-            "{} ({})".format(catalog.title, catalog.uuid)
-            for catalog in cleaned_data.get("enterprise_customer_catalogs")
+            '{} ({})'.format(catalog.title, catalog.uuid)
+            for catalog in cleaned_data.get('enterprise_customer_catalogs')
             if catalog.enterprise_customer != report_customer
         ]
 
         if invalid_catalogs:
             message = _(
-                "These catalogs for reporting do not match enterprise"
-                "customer {enterprise_customer}: {invalid_catalogs}",
+                'These catalogs for reporting do not match enterprise'
+                'customer {enterprise_customer}: {invalid_catalogs}',
             ).format(
                 enterprise_customer=report_customer,
                 invalid_catalogs=invalid_catalogs,
             )
-            self.add_error("enterprise_customer_catalogs", message)
+            self.add_error('enterprise_customer_catalogs', message)
 
 
 class TransmitEnterpriseCoursesForm(forms.Form):
     """
     Form to transmit courses metadata for enterprise customers.
     """
-
     channel_worker_username = forms.CharField(
-        label=_("Enter enterprise channel worker username."), required=True
+        label=_('Enter enterprise channel worker username.'),
+        required=True
     )
 
     def clean_channel_worker_username(self):
@@ -710,7 +639,7 @@ class TransmitEnterpriseCoursesForm(forms.Form):
         Returns:
             str: the cleaned value of channel user username for transmitting courses metadata.
         """
-        channel_worker_username = self.cleaned_data["channel_worker_username"].strip()
+        channel_worker_username = self.cleaned_data['channel_worker_username'].strip()
 
         try:
             User.objects.get(username=channel_worker_username)
@@ -732,10 +661,10 @@ class SystemWideEnterpriseUserRoleAssignmentForm(UserRoleAssignmentAdminForm):
     class Meta:
         model = SystemWideEnterpriseUserRoleAssignment
         fields = [
-            "user",
-            "role",
-            "enterprise_customer",
-            "applies_to_all_contexts",
+            'user',
+            'role',
+            'enterprise_customer',
+            'applies_to_all_contexts',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -746,15 +675,11 @@ class SystemWideEnterpriseUserRoleAssignmentForm(UserRoleAssignmentAdminForm):
         """
         super().__init__(*args, **kwargs)
         try:
-            self.fields[
-                "enterprise_customer"
-            ].queryset = EnterpriseCustomer.objects.filter(
+            self.fields['enterprise_customer'].queryset = EnterpriseCustomer.objects.filter(
                 enterprise_customer_users__user_id=self.instance.user.id,
             )
         except SystemWideEnterpriseUserRoleAssignment.user.RelatedObjectDoesNotExist:
-            self.fields[
-                "enterprise_customer"
-            ].queryset = EnterpriseCustomer.objects.none()
+            self.fields['enterprise_customer'].queryset = EnterpriseCustomer.objects.none()
 
 
 class EnterpriseFeatureUserRoleAssignmentForm(UserRoleAssignmentAdminForm):
@@ -764,7 +689,7 @@ class EnterpriseFeatureUserRoleAssignmentForm(UserRoleAssignmentAdminForm):
 
     class Meta:
         model = EnterpriseFeatureUserRoleAssignment
-        fields = ["user", "role"]
+        fields = ['user', 'role']
 
 
 class AdminNotificationForm(forms.ModelForm):
@@ -774,9 +699,9 @@ class AdminNotificationForm(forms.ModelForm):
 
     class Meta:
         model = AdminNotification
-        fields = "__all__"
+        fields = '__all__'
         widgets = {
-            "text": forms.Textarea(attrs={"cols": 80, "rows": 5}),
+            'text': forms.Textarea(attrs={'cols': 80, 'rows': 5}),
         }
 
     def clean(self):
@@ -787,32 +712,28 @@ class AdminNotificationForm(forms.ModelForm):
         """
         cleaned_data = super().clean()
 
-        start_date = cleaned_data.get("start_date", None)
-        expiration_date = cleaned_data.get("expiration_date", None)
+        start_date = cleaned_data.get('start_date', None)
+        expiration_date = cleaned_data.get('expiration_date', None)
 
         if start_date is None or expiration_date is None:
             # Start and expiration dates are mandatory.
-            raise ValidationError("Start and expiration dates are mandatory.")
+            raise ValidationError('Start and expiration dates are mandatory.')
 
         if expiration_date < start_date:
             # `start_date` must always come before the `expiration_date`
-            raise ValidationError(
-                {"expiration_date": ["Expiration date should be after start date."]}
-            )
-        admin_notification = (
-            AdminNotification.objects.filter(
-                Q(start_date__range=(start_date, expiration_date))
-                | Q(expiration_date__range=(start_date, expiration_date))
-                | Q(start_date__lt=start_date, expiration_date__gt=expiration_date)
-            )
-            .exclude(pk=self.instance.id)
-            .exists()
-        )
+            raise ValidationError({'expiration_date': ['Expiration date should be after start date.']})
+        admin_notification = AdminNotification.objects.filter(
+            Q(start_date__range=(start_date, expiration_date)) |
+            Q(expiration_date__range=(start_date, expiration_date)) |
+            Q(start_date__lt=start_date, expiration_date__gt=expiration_date)
+        ).exclude(
+            pk=self.instance.id
+        ).exists()
 
         if admin_notification:
             # This should not happen, as there can be only one admin notification instance in a particular date range.
             message = _(
-                "Please select different date range. There is another notification scheduled in this date range.",
+                'Please select different date range. There is another notification scheduled in this date range.',
             )
             logger.exception(message)
 
