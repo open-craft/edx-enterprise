@@ -17,6 +17,10 @@ Unreleased
 ----------
 * nothing
 
+[3.42.7]
+--------
+feat: allow enrollment to invite-only courses via manage learners admin page
+
 [3.42.6]
 --------
 feat: allow enrollment api admin to see all enrollments
