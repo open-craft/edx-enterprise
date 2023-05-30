@@ -67,6 +67,11 @@ class ManageLearnersForm(forms.Form):
         label=_("Enroll these learners in this course"), required=False,
         help_text=_("To enroll learners in a course, enter a course ID."),
     )
+    force_enrollment = forms.BooleanField(
+        label=_("Force Enrollment"),
+        help_text=_("The selected course is 'Invite Only'. Only staff can enroll learners to this course."),
+        required=False,
+    )
     course_mode = forms.ChoiceField(
         label=_("Course enrollment track"), required=False,
         choices=BLANK_CHOICE_DASH + [
@@ -128,6 +133,7 @@ class ManageLearnersForm(forms.Form):
         REASON = "reason"
         SALES_FORCE_ID = "sales_force_id"
         DISCOUNT = "discount"
+        FORCE_ENROLLMENT = "force_enrollment"
 
     class CsvColumns:
         """
