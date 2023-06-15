@@ -17,6 +17,9 @@ Unreleased
 ----------
 * nothing
 
+[3.42.8]
+feat: add additional fields to EnterpriseCourseEnrollmentViewSet
+
 [3.42.7]
 --------
 feat: allow enrollment to invite-only courses via manage learners admin page
