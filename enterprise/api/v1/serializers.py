@@ -316,12 +316,24 @@ class EnterpriseCourseEnrollmentReadOnlySerializer(serializers.ModelSerializer):
     """
     Serializer for EnterpriseCourseEnrollment model.
     """
+    class Meta:
+        model = models.EnterpriseCourseEnrollment
+        fields = (
+            'enterprise_customer_user', 'course_id', 'created',
+        )
+
+
+class EnterpriseCourseEnrollmentWithAdditionalFieldsReadOnlySerializer(EnterpriseCourseEnrollmentReadOnlySerializer):
+    """
+    Serializer for EnterpriseCourseEnrollment model with additional fields.
+    """
 
     class Meta:
         model = models.EnterpriseCourseEnrollment
         fields = (
             'enterprise_customer_user',
             'course_id',
+            'created',
             'enrollment_date',
             'enrollment_track',
             'user_email',

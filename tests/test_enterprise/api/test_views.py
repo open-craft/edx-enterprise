@@ -1220,10 +1220,12 @@ class TestEnterpriseCustomerViewSet(BaseTestEnterpriseAPIViews):
             [{
                 'enterprise_customer_user__id': 1,
                 'course_id': 'course-v1:edX+DemoX+DemoCourse',
+                'created': '2021-10-20T19:01:31Z',
             }],
             [{
                 'enterprise_customer_user': 1,
                 'course_id': 'course-v1:edX+DemoX+DemoCourse',
+                'created': '2021-10-20T19:01:31Z',
                 'enrollment_date': None,
                 'enrollment_track': None,
                 'user_email': None,

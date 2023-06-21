@@ -1683,6 +1683,21 @@ class EnterpriseCourseEnrollmentManager(models.Manager):
 
         return super().get_queryset().select_related('enterprise_customer_user').filter(
             enterprise_customer_user__linked=True
+        )
+
+
+class EnterpriseCourseEnrollmentWithAdditionalFieldsManager(models.Manager):
+    """
+    Model manager for `EnterpriseCourseEnrollment`.
+    """
+
+    def get_queryset(self):
+        """
+        Override to return only those enrollment records for which learner is linked to an enterprise.
+        """
+
+        return super().get_queryset().select_related('enterprise_customer_user').filter(
+            enterprise_customer_user__linked=True
         ).annotate(**self._get_additional_data_annotations())
 
     def _get_additional_data_annotations(self):
@@ -1739,6 +1754,7 @@ class EnterpriseCourseEnrollment(TimeStampedModel):
     """
 
     objects = EnterpriseCourseEnrollmentManager()
+    with_additional_fields = EnterpriseCourseEnrollmentWithAdditionalFieldsManager()
 
     class Meta:
         unique_together = (('enterprise_customer_user', 'course_id',),)

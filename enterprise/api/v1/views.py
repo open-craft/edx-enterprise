@@ -457,7 +457,7 @@ class EnterpriseCourseEnrollmentViewSet(EnterpriseReadWriteModelViewSet):
     API views for the ``enterprise-course-enrollment`` API endpoint.
     """
 
-    queryset = models.EnterpriseCourseEnrollment.objects.all()
+    queryset = models.EnterpriseCourseEnrollment.with_additional_fields.all()
     filter_backends = (filters.OrderingFilter, DjangoFilterBackend, EnterpriseCourseEnrollmentFilterBackend)
 
     USER_ID_FILTER = 'enterprise_customer_user__user_id'
@@ -472,7 +472,7 @@ class EnterpriseCourseEnrollmentViewSet(EnterpriseReadWriteModelViewSet):
         Use a special serializer for any requests that aren't read-only.
         """
         if self.request.method in ('GET',):
-            return serializers.EnterpriseCourseEnrollmentReadOnlySerializer
+            return serializers.EnterpriseCourseEnrollmentWithAdditionalFieldsReadOnlySerializer
         return serializers.EnterpriseCourseEnrollmentWriteSerializer
 
 
