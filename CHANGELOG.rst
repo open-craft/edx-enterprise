@@ -17,7 +17,12 @@ Unreleased
 ----------
 * nothing
 
+[3.42.9]
+--------
+feat: add a flag to hide course prices in enrollment page when zero
+
 [3.42.8]
+--------
 feat: add additional fields to EnterpriseCourseEnrollmentViewSet
 
 [3.42.7]
