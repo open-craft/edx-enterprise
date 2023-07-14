@@ -134,6 +134,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "uuid",
                 "name",
                 "slug",
+                "allow_enrollment_in_invite_only_courses",
                 "active",
                 "country",
                 "invite_keys",
