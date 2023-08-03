@@ -2332,7 +2332,7 @@ def hide_price_when_zero(enterprise_customer, course_modes):
 
 def ensure_course_enrollment_is_allowed(course_id, email, enrollment_api_client):
     """
-    Creates a CourseEnrollmentAllowed object for initiation only courses.
+    Create a CourseEnrollmentAllowed object for invitation-only courses.
     Arguments:
         course_id (str): ID of the course to allow enrollment
         email (str): email of the user whose enrollment should be allowed
