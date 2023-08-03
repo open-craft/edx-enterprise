@@ -147,6 +147,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "reply_to",
                 "hide_labor_market_data",
                 "hide_course_price_when_zero",
+                "allow_enrollment_in_invite_only_courses",
             ]
         ),
         (
