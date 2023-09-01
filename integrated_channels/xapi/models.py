@@ -3,10 +3,9 @@ Models for xAPI.
 """
 
 import base64
+from functools import cached_property
 
 import requests
-
-from functools import cached_property
 
 from django.contrib import auth
 from django.core.exceptions import ValidationError
@@ -50,8 +49,8 @@ class XAPILRSConfiguration(TimeStampedModel):
         help_text=_('Is this configuration active?'),
     )
     auth_method = models.CharField(
-        max_length=16, 
-        verbose_name="xAPI POST Authentication Method", 
+        max_length=16,
+        verbose_name="xAPI POST Authentication Method",
         choices=XAPIAuthMethods.choices,
         default=XAPIAuthMethods.HTTP_BASIC,
         help_text=_('The Authentication Method to use when sending the xAPI data to the endpoint.')

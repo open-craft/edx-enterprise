@@ -7,12 +7,11 @@ import json
 import unittest
 
 import responses
-
 from pytest import mark
+
 from django.core.exceptions import ValidationError
 
 from integrated_channels.xapi.models import XAPIAuthMethods, XAPILRSConfiguration
-
 from test_utils import factories
 
 
