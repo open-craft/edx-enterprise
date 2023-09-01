@@ -4,7 +4,12 @@ Models for xAPI.
 
 import base64
 
+import requests
+
+from functools import cached_property
+
 from django.contrib import auth
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -14,6 +19,11 @@ from enterprise.models import EnterpriseCustomer
 from integrated_channels.integrated_channel.models import LearnerDataTransmissionAudit
 
 User = auth.get_user_model()
+
+
+class XAPIAuthMethods(models.TextChoices):
+    HTTP_BASIC = 'BASIC', _('HTTP Basic')
+    OAUTH2_CLIENT_CREDS = 'OAUTH2_CC', _('OAuth 2.0 Client Credentials')
 
 
 class XAPILRSConfiguration(TimeStampedModel):
@@ -39,6 +49,25 @@ class XAPILRSConfiguration(TimeStampedModel):
         null=False,
         help_text=_('Is this configuration active?'),
     )
+    auth_method = models.CharField(
+        max_length=16, 
+        verbose_name="xAPI POST Authentication Method", 
+        choices=XAPIAuthMethods.choices,
+        default=XAPIAuthMethods.HTTP_BASIC,
+        help_text=_('The Authentication Method to use when sending the xAPI data to the endpoint.')
+    )
+    auth_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text=_("URL to use for authentication. Eg., Token URL for OAuth")
+    )
+    oauth_scope = models.CharField(
+        max_length=255,
+        verbose_name=_('OAuth scope'),
+        blank=True,
+        null=True,
+        help_text=_('The "scope" to pass for OAuth authentication.')
+    )
 
     class Meta:
         app_label = 'xapi'
@@ -62,9 +91,42 @@ class XAPILRSConfiguration(TimeStampedModel):
         """
         Authorization header for authenticating requests to LRS.
         """
+        if self.auth_method == XAPIAuthMethods.OAUTH2_CLIENT_CREDS:
+            return f'Bearer {self.access_token}'
+
         return 'Basic {}'.format(
             base64.b64encode('{key}:{secret}'.format(key=self.key, secret=self.secret).encode()).decode()
         )
+
+    def clean(self):
+        errors = {}
+        # Don't allow OAuth2 Client Credentials method to be set without auth_url, or oauth_scope
+        if self.auth_method == XAPIAuthMethods.OAUTH2_CLIENT_CREDS:
+            if not self.auth_url:
+                errors['auth_url'] = _("Authentication URL is required for the OAuth2 authentication method.")
+            if not self.oauth_scope:
+                errors['oauth_scope'] = _("OAuth scope is required for the OAuth2 authentication method.")
+
+        if errors:
+            raise ValidationError(errors)
+
+    @cached_property
+    def access_token(self):
+        """
+        Gets the access token from the OAuth2 Authentication endpoint return it.
+        """
+        if self.auth_method != XAPIAuthMethods.OAUTH2_CLIENT_CREDS:
+            raise RuntimeError("Access Token can be fetched only for OAuth2 Client Credentials authenication method.")
+
+        data = {
+            "grant_type": "client_credentials",
+            "scope": self.oauth_scope,
+            "client_id": self.key,
+            "client_secret": self.secret
+        }
+        response = requests.post(self.auth_url, data=data)
+        response.raise_for_status()
+        return response.json()["access_token"]
 
 
 class XAPILearnerDataTransmissionAudit(LearnerDataTransmissionAudit):

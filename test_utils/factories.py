@@ -60,7 +60,7 @@ from integrated_channels.sap_success_factors.models import (
     SAPSuccessFactorsGlobalConfiguration,
     SapSuccessFactorsLearnerDataTransmissionAudit,
 )
-from integrated_channels.xapi.models import XAPILearnerDataTransmissionAudit, XAPILRSConfiguration
+from integrated_channels.xapi.models import XAPIAuthMethods, XAPILearnerDataTransmissionAudit, XAPILRSConfiguration
 
 FAKER = FakerFactory.create()
 User = auth.get_user_model()
@@ -786,6 +786,9 @@ class XAPILRSConfigurationFactory(factory.django.DjangoModelFactory):
     key = factory.LazyAttribute(lambda x: FAKER.slug())
     secret = factory.LazyAttribute(lambda x: FAKER.uuid4())
     active = True
+    auth_method = XAPIAuthMethods.HTTP_BASIC
+    auth_url = factory.LazyAttribute(lambda x: FAKER.url())
+    oauth_scope = factory.LazyAttribute(lambda x: FAKER.slug())
 
 
 class XAPILearnerDataTransmissionAuditFactory(factory.django.DjangoModelFactory):

@@ -3,9 +3,15 @@ Tests for the xAPI models.
 """
 
 import base64
+import json
 import unittest
 
+import responses
+
 from pytest import mark
+from django.core.exceptions import ValidationError
+
+from integrated_channels.xapi.models import XAPIAuthMethods, XAPILRSConfiguration
 
 from test_utils import factories
 
@@ -19,6 +25,9 @@ class TestXAPILRSConfiguration(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.x_api_lrs_config = factories.XAPILRSConfigurationFactory()
+        self.x_api_oauth_lrs_config = factories.XAPILRSConfigurationFactory(
+            auth_method=XAPIAuthMethods.OAUTH2_CLIENT_CREDS
+        )
 
     def test_string_representation(self):
         """
@@ -40,6 +49,52 @@ class TestXAPILRSConfiguration(unittest.TestCase):
             ).encode()).decode()
         )
         assert expected_header == self.x_api_lrs_config.authorization_header
+
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST,
+                self.x_api_oauth_lrs_config.auth_url,
+                body=json.dumps({
+                    'access_token': 'test_token',
+                    'token_type': 'bearer',
+                    'expires_in': 3600
+                }),
+                status=200,
+                content_type="application/json"
+            )
+            expected_header = 'Bearer test_token'
+
+            assert expected_header == self.x_api_oauth_lrs_config.authorization_header
+
+    def test_auth_url_and_scope_are_required_oauth2_auth_method(self):
+        """
+        Test that a validation error is raised when the auth_url or scope is not set for auth method OAUTH2_CC.
+        """
+        conf = XAPILRSConfiguration(
+            enterprise_customer=factories.EnterpriseCustomerFactory(),
+            endpoint="https://xapi.endpoint",
+            key="key",
+            secret="secret",
+            active=True,
+            auth_method="OAUTH2_CC",
+        )
+        with self.assertRaises(ValidationError) as context:
+            conf.full_clean()
+            self.assertIn('auth_url', context.exception.message)
+            self.assertIn('oauth_scope', context.exception.message)
+
+        conf.auth_url = "https://auth.url"
+
+        with self.assertRaises(ValidationError) as context:
+            conf.full_clean()
+            self.assertIn('oauth_scope', context.exception.message)
+
+        conf.auth_url = None
+        conf.oauth_scope = "xapi:write"
+
+        with self.assertRaises(ValidationError) as context:
+            conf.full_clean()
+            self.assertIn('auth_url', context.exception.message)
 
 
 @mark.django_db
