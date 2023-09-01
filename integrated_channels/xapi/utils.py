@@ -147,6 +147,6 @@ def is_success_response(response_fields):
     Returns: Boolean
     """
     success_response = False
-    if response_fields['status'] == 200:
+    if 200 <= response_fields['status'] <= 299:
         success_response = True
     return success_response

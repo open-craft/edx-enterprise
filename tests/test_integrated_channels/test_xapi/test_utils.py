@@ -151,6 +151,12 @@ class TestUtils(unittest.TestCase):
         response_fields = {'status': 200, 'error_message': None}
         self.assertTrue(is_success_response(response_fields))
 
+        response_fields = {'status': 201, 'error_message': None}
+        self.assertTrue(is_success_response(response_fields))
+
+        response_fields = {'status': 202, 'error_message': None}
+        self.assertTrue(is_success_response(response_fields))
+
         response_fields = {'status': 400, 'error_message': None}
         self.assertFalse(is_success_response(response_fields))
 
