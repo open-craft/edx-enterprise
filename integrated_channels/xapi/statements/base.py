@@ -4,7 +4,7 @@ Statements base for xAPI.
 
 from tincan import Activity, ActivityDefinition, Agent, LanguageMap, Statement
 
-from integrated_channels.xapi.constants import X_API_ACTIVITY_COURSE
+from integrated_channels.xapi.constants import OBJECT_ID_PLAIN, X_API_ACTIVITY_COURSE
 
 
 class EnterpriseStatement(Statement):
@@ -38,12 +38,13 @@ class EnterpriseStatement(Statement):
             mbox='mailto:{email}'.format(email=user.email),
         )
 
-    def get_object(self, domain, course_overview, object_type):
+    def get_object(self, domain, course_overview, object_type, object_id_type):
         """
         Returns the object (activity) component of the Enterprise xAPI statement.
         Arguments:
             course_overview (CourseOverview): CourseOverview.
             object_type (string): Object type for activity.
+            object_id_type (string): The format to use for the Object ID. OBJECT_ID_URI or OBJECT_ID_PLAIN
         """
         name = (course_overview.display_name or '').encode("ascii", "ignore").decode('ascii')
 
@@ -53,11 +54,14 @@ class EnterpriseStatement(Statement):
         if object_type is not None and object_type == 'course':
             activity_id = course_overview.course_key
 
-        xapi_activity_id = 'https://{domain}/xapi/activities/{object_type}/{activity_id}'.format(
-            domain=domain,
-            object_type=object_type,
-            activity_id=activity_id
-        )
+        if object_id_type == OBJECT_ID_PLAIN:
+            xapi_activity_id = course_overview.id
+        else:
+            xapi_activity_id = 'https://{domain}/xapi/activities/{object_type}/{activity_id}'.format(
+                domain=domain,
+                object_type=object_type,
+                activity_id=activity_id
+            )
 
         xapi_object_extensions = {}
 

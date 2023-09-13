@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from faker import Factory as FakerFactory
 from pytest import mark
 
-from integrated_channels.xapi.constants import X_API_ACTIVITY_COURSE, X_API_VERB_COMPLETED
+from integrated_channels.xapi.constants import OBJECT_ID_PLAIN, X_API_ACTIVITY_COURSE, X_API_VERB_COMPLETED
 from integrated_channels.xapi.statements.learner_course_completion import LearnerCourseCompletionStatement
 from test_utils import factories
 
@@ -41,6 +41,7 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
         self.object_id_course = 'https://{domain}/xapi/activities/course/{activity_id}'.format(
             domain=self.site.domain,
             activity_id=self.course_overview.course_key)
+        self.plain_course_id = self.course_overview.id
 
         self.object_id_courserun = 'https://{domain}/xapi/activities/courserun/{activity_id}'.format(
             domain=self.site.domain,
@@ -181,3 +182,30 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             'course'
         )
         self.assertDictEqual(json.loads(statement.to_json()), self.expected_notpassed)
+
+    def test_statement_with_different_course_id_formats(self):
+        """
+        Validate statement contains Object IDs in the specified format.
+        """
+        statement = LearnerCourseCompletionStatement(
+            self.site,
+            self.user,
+            self.mock_social_auth,
+            self.course_overview,
+            self.course_grade,
+            'course'
+        )  # defaults to URI format
+
+        self.assertEqual(json.loads(statement.to_json())["object"]["id"], self.object_id_course)
+
+        statement = LearnerCourseCompletionStatement(
+            self.site,
+            self.user,
+            self.mock_social_auth,
+            self.course_overview,
+            self.course_grade,
+            'course',
+            OBJECT_ID_PLAIN
+        )
+
+        self.assertEqual(json.loads(statement.to_json())["object"]["id"], self.plain_course_id)

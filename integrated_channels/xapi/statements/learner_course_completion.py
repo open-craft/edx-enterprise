@@ -4,7 +4,7 @@ xAPI statement for course completion.
 
 from tincan import LanguageMap, Result, Score, Verb
 
-from integrated_channels.xapi.constants import MAX_SCORE, MIN_SCORE, X_API_VERB_COMPLETED
+from integrated_channels.xapi.constants import MAX_SCORE, MIN_SCORE, OBJECT_ID_URI, X_API_VERB_COMPLETED
 from integrated_channels.xapi.statements.base import EnterpriseStatement
 
 
@@ -13,7 +13,7 @@ class LearnerCourseCompletionStatement(EnterpriseStatement):
     xAPI Statement to serialize data related to course completion.
     """
 
-    def __init__(self, site, user, user_social_auth, course_overview, course_grade, object_type, *args, **kwargs):
+    def __init__(self, site, user, user_social_auth, course_overview, course_grade, object_type, object_id_type=OBJECT_ID_URI, *args, **kwargs):
         """
         Initialize and populate statement with learner info and course info.
 
@@ -22,11 +22,12 @@ class LearnerCourseCompletionStatement(EnterpriseStatement):
             user_social_auth (UserSocialAuth): UserSocialAuth object for learner
             course_overview (CourseOverview): course overview object containing course details.
             course_grade (CourseGrade): User grade in the course.
+            object_id_type (string): Either OBJECT_ID_PLAIN or OBJECT_ID_URI. Defaults to OBJECT_ID_URI.
         """
         kwargs.update(
             actor=self.get_actor(user, user_social_auth),
             verb=self.get_verb(),
-            object=self.get_object(site.domain, course_overview, object_type),
+            object=self.get_object(site.domain, course_overview, object_type, object_id_type),
             result=self.get_result(course_grade),
         )
         super().__init__(*args, **kwargs)

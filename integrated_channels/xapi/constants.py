@@ -12,3 +12,7 @@ X_API_ACTIVITY_COURSE = 'http://adlnet.gov/expapi/activities/course'
 # Constants for edX grades
 MIN_SCORE = 0
 MAX_SCORE = 100
+
+# Constants for xAPI Object ID types
+OBJECT_ID_URI = 'uri'
+OBJECT_ID_PLAIN = 'plain'

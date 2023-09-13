@@ -7,6 +7,7 @@ import logging
 from enterprise.tpa_pipeline import get_user_social_auth
 from integrated_channels.exceptions import ClientError
 from integrated_channels.xapi.client import EnterpriseXAPIClient
+from integrated_channels.xapi.constants import OBJECT_ID_PLAIN, OBJECT_ID_URI
 from integrated_channels.xapi.statements.learner_course_completion import LearnerCourseCompletionStatement
 from integrated_channels.xapi.statements.learner_course_enrollment import LearnerCourseEnrollmentStatement
 
@@ -85,6 +86,7 @@ def send_course_enrollment_statement(lrs_configuration, user, course_overview, o
         user_social_auth,
         course_overview,
         object_type,
+        OBJECT_ID_PLAIN if lrs_configuration.plain_course_id_in_statements else OBJECT_ID_URI
     )
 
     response_fields = _send_statement(
@@ -124,6 +126,7 @@ def send_course_completion_statement(lrs_configuration,
         course_overview,
         course_grade,
         object_type,
+        OBJECT_ID_PLAIN if lrs_configuration.plain_course_id_in_statements else OBJECT_ID_URI
     )
 
     response_fields = _send_statement(

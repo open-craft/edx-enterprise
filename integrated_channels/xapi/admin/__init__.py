@@ -19,6 +19,10 @@ class XAPILRSConfigurationAdmin(admin.ModelAdmin):
         'version',
         'key',
         'secret',
+        'auth_method',
+        'auth_url',
+        'oauth_scope',
+        'plain_course_id_in_statements'
     )
 
     list_display = (

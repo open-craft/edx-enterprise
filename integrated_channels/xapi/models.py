@@ -67,6 +67,13 @@ class XAPILRSConfiguration(TimeStampedModel):
         null=True,
         help_text=_('The "scope" to pass for OAuth authentication.')
     )
+    plain_course_id_in_statements = models.BooleanField(
+        default=False,
+        blank=False,
+        null=False,
+        verbose_name=_("Use plain Course ID in xAPI Statements"),
+        help_text=_('Uses the plain course ID (eg., course-v1:X+Y+Z) instead of the URI format in xAPI statements.')
+    )
 
     class Meta:
         app_label = 'xapi'
