@@ -4,7 +4,7 @@ xAPI statement for learner course enrollment.
 
 from tincan import LanguageMap, Verb
 
-from integrated_channels.xapi.constants import OBJECT_ID_URI, X_API_VERB_REGISTERED
+from integrated_channels.xapi.constants import X_API_VERB_REGISTERED
 from integrated_channels.xapi.statements.base import EnterpriseStatement
 
 
@@ -13,7 +13,7 @@ class LearnerCourseEnrollmentStatement(EnterpriseStatement):
     xAPI statement to serialize data related to course registration.
     """
 
-    def __init__(self, site, user, user_social_auth, course_overview, object_type, object_id_type=OBJECT_ID_URI, *args, **kwargs):
+    def __init__(self, site, user, user_social_auth, course_overview, object_type, object_id_type, *args, **kwargs):
         """
         Initialize and populate statement with learner info and course info.
 
@@ -22,7 +22,7 @@ class LearnerCourseEnrollmentStatement(EnterpriseStatement):
             user_social_auth (UserSocialAuth): UserSocialAuth object of learner for the enterprise if learner has a
             linked third party auth account
             course_overview (CourseOverview): course overview object containing course details.
-            object_id_type (string): Either OBJECT_ID_PLAIN or OBJECT_ID_URI. Defaults to OBJECT_ID_URI.
+            object_id_type (string): Either OBJECT_ID_PLAIN or OBJECT_ID_URI.
         """
         kwargs.update(
             actor=self.get_actor(user, user_social_auth),

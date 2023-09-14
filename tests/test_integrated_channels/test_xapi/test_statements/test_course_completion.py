@@ -9,7 +9,12 @@ from unittest.mock import Mock
 from faker import Factory as FakerFactory
 from pytest import mark
 
-from integrated_channels.xapi.constants import OBJECT_ID_PLAIN, X_API_ACTIVITY_COURSE, X_API_VERB_COMPLETED
+from integrated_channels.xapi.constants import (
+    OBJECT_ID_PLAIN,
+    OBJECT_ID_URI,
+    X_API_ACTIVITY_COURSE,
+    X_API_VERB_COMPLETED,
+)
 from integrated_channels.xapi.statements.learner_course_completion import LearnerCourseCompletionStatement
 from test_utils import factories
 
@@ -151,7 +156,8 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             self.mock_social_auth,
             self.course_overview,
             self.course_grade,
-            'course'
+            'course',
+            OBJECT_ID_URI,
         )
         self.assertDictEqual(json.loads(statement.to_json()), self.expected_course)
 
@@ -165,7 +171,8 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             self.mock_social_auth,
             self.course_overview,
             self.course_grade,
-            'courserun'
+            'courserun',
+            OBJECT_ID_URI,
         )
         self.assertDictEqual(json.loads(statement.to_json()), self.expected_courserun)
 
@@ -179,7 +186,8 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             self.mock_social_auth,
             self.course_overview,
             self.course_grade_notpassed,
-            'course'
+            'course',
+            OBJECT_ID_URI,
         )
         self.assertDictEqual(json.loads(statement.to_json()), self.expected_notpassed)
 
@@ -193,8 +201,9 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             self.mock_social_auth,
             self.course_overview,
             self.course_grade,
-            'course'
-        )  # defaults to URI format
+            'course',
+            OBJECT_ID_URI,
+        )
 
         self.assertEqual(json.loads(statement.to_json())["object"]["id"], self.object_id_course)
 
@@ -205,7 +214,7 @@ class TestLearnerCourseCompletionStatement(unittest.TestCase):
             self.course_overview,
             self.course_grade,
             'course',
-            OBJECT_ID_PLAIN
+            OBJECT_ID_PLAIN,
         )
 
         self.assertEqual(json.loads(statement.to_json())["object"]["id"], self.plain_course_id)
