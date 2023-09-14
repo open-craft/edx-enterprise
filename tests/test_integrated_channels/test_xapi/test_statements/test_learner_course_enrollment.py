@@ -39,7 +39,7 @@ class TestLearnerCourseEnrollmentStatement(unittest.TestCase):
         self.object_id_course = 'https://{domain}/xapi/activities/course/{activity_id}'.format(
             domain=self.site.domain,
             activity_id=self.course_overview.course_key)
-        self.plain_course_id = self.course_overview.course_key
+        self.plain_course_id = self.course_overview.id
 
         self.object_id_courserun = 'https://{domain}/xapi/activities/courserun/{activity_id}'.format(
             domain=self.site.domain,

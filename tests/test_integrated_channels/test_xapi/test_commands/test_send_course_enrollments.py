@@ -287,10 +287,7 @@ class TestSendCourseEnrollments(unittest.TestCase):
 
         Command.is_already_transmitted(xapi_transmissions, user_id, course_id)
 
-    @mock.patch(
-        'integrated_channels.xapi.utils.is_success_response',
-        mock.MagicMock(return_value=False)
-    )
+    @mock.patch(MODULE_PATH + 'is_success_response', mock.MagicMock(return_value=False))
     @mock.patch(MODULE_PATH + 'send_course_enrollment_statement')
     def test_transmit_course_enrollments_transmit_fail_skip(self, mock_send_statement):
         # pylint: disable=import-outside-toplevel
