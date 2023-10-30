@@ -17,6 +17,11 @@ Unreleased
 ----------
 * Nothing
 
+[3.61.12]
+---------
+This version is based on v3.61.11 and contains some backports needed to OpenCraft's clients. There is no "official" v3.61.12.
+See this PR for more details: https://github.com/open-craft/edx-enterprise/pull/10
+
 [3.61.11]
 ---------
 feat: include owners and longer descriptions for degreed2 content metadata transmissions
