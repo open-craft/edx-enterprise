@@ -134,6 +134,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "uuid",
                 "name",
                 "slug",
+                "allow_enrollment_in_invite_only_courses",
                 "active",
                 "country",
                 "invite_keys",
@@ -167,6 +168,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "system_wide_role_assignments",
                 "reply_to",
                 "hide_labor_market_data",
+                "hide_course_price_when_zero",
             ]
         ),
         (
