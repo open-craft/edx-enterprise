@@ -8,6 +8,10 @@ alabaster==0.7.12
     # via
     #   -r requirements/doc.txt
     #   sphinx
+algoliasearch==2.6.3
+    # This has been copied from here: https://github.com/openedx/edx-platform/blob/176d0d885a4e182ff8c9607765891e78d459a5b8/requirements/constraints.txt#L91
+    # New versions of edx-enterprise has this requirement copied from edx-platform to `requirements/edx-platform-constraints.txt`,
+    # so we can remove this once we upgrade edx-enterprise. Normally, Palm already has this package installed, but not in test environment.
 amqp==5.1.1
     # via
     #   -r requirements/doc.txt
