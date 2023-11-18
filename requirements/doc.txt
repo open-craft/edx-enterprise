@@ -6,6 +6,8 @@
 #
 alabaster==0.7.12
     # via sphinx
+algoliasearch==2.6.3
+    # via -r requirements/test-master.txt
 amqp==5.0.9
     # via
     #   -r requirements/test-master.txt
@@ -279,6 +281,7 @@ readme-renderer==32.0
 requests==2.27.1
     # via
     #   -r requirements/test-master.txt
+    #   algoliasearch
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   pyjwkest
