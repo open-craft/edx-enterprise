@@ -2,7 +2,7 @@
 # This file contains the dependencies explicitly needed for this library.
 #
 # Packages directly used by this library that we do not need pinned to a specific version.
-algoliasearch
+algoliasearch<3.0.0
 bleach
 celery
 code-annotations
