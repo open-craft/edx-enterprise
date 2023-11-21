@@ -74,11 +74,14 @@ docs: ## generate Sphinx HTML documentation, including API docs
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
 PIP_COMPILE = pip-compile --upgrade --rebuild $(PIP_COMPILE_OPTS)
 LOCAL_EDX_PINS = requirements/edx-platform-constraints.txt
-PLATFORM_BASE_REQS = https://raw.githubusercontent.com/edx/edx-platform/master/requirements/edx/base.txt
+# edx-enterprise can't work alone and thus doesn't have it's own requirements. It pulls base requirements
+# file from edx-platform and constrains it's own requirements (mostly for the test environment) using it.
+PLATFORM_BASE_REQS = https://raw.githubusercontent.com/open-craft/edx-platform/opencraft-release/nutmeg.2/requirements/edx/base.txt
 COMMON_CONSTRAINTS_TXT=requirements/common_constraints.txt
 .PHONY: $(COMMON_CONSTRAINTS_TXT)
 $(COMMON_CONSTRAINTS_TXT):
-	wget -O "$(@)" https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt || touch "$(@)"
+	# Requirements were upgraded 15 February 2022. This commit was added to `edx-lint` on 14 February 2022.
+	wget -O "$(@)" https://raw.githubusercontent.com/openedx/edx-lint/7dce0b15b1e8ef402bc8ad0d160a4a2516d079fe/edx_lint/files/common_constraints.txt || touch "$(@)"
 	echo "$(COMMON_CONSTRAINTS_TEMP_COMMENT)" | cat - $(@) > temp && mv temp $(@)
 
 check_pins: $(COMMON_CONSTRAINTS_TXT) ## check that our local copy of edx-platform pins is accurate

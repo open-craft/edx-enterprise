@@ -25,6 +25,8 @@ aiohttp==3.8.1
     # via geoip2
 aiosignal==1.2.0
     # via aiohttp
+algoliasearch==2.6.3
+    # via -r requirements/edx/base.in
     # via kombu
 analytics-python==1.4.0
     # via -r requirements/edx/base.in
@@ -685,7 +687,8 @@ openedx-events==0.7.1
     # via -r requirements/edx/base.in
 openedx-filters==0.4.3
     # via -r requirements/edx/base.in
-ora2==3.8.2
+# TODO: Backport https://github.com/openedx/edx-ora2/pull/1869 to Olive if it uses a lower version than 4.5.0.
+ora2 @ git+https://github.com/open-craft/edx-ora2@agrendalath/bb-6151-nutmeg_backport
     # via -r requirements/edx/base.in
 packaging==21.3
     # via
@@ -725,7 +728,7 @@ psutil==5.9.0
     # via
     #   -r requirements/edx/paver.txt
     #   edx-django-utils
-py2neo==2021.2.3
+py2neo @ https://github.com/overhangio/py2neo/releases/download/2021.2.3/py2neo-2021.2.3.tar.gz
     # via
     #   -c requirements/edx/../constraints.txt
     #   -r requirements/edx/base.in
@@ -855,6 +858,7 @@ regex==2022.1.18
 requests==2.27.1
     # via
     #   -r requirements/edx/paver.txt
+    #   algoliasearch
     #   analytics-python
     #   coreapi
     #   django-oauth-toolkit

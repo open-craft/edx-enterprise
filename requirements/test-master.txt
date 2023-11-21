@@ -4,6 +4,10 @@
 #
 #    make upgrade
 #
+algoliasearch==2.6.3
+    # via
+    #   -c requirements/edx-platform-constraints.txt
+    #   -r requirements/base.in
 amqp==5.0.9
     # via kombu
 aniso8601==9.0.1
@@ -281,6 +285,7 @@ requests==2.27.1
     # via
     #   -c requirements/edx-platform-constraints.txt
     #   -r requirements/base.in
+    #   algoliasearch
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   pyjwkest

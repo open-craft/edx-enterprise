@@ -7,6 +7,7 @@ from smtplib import SMTPException
 from urllib.parse import quote_plus, unquote
 
 import requests
+from algoliasearch.search_client import SearchClient
 from django_filters.rest_framework import DjangoFilterBackend
 from edx_rbac.decorators import permission_required
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
@@ -450,6 +451,44 @@ class EnterpriseCustomerViewSet(EnterpriseReadWriteModelViewSet):
         response_body = {"enable_universal_link": enable_universal_link}
         headers = self.get_success_headers(response_body)
         return Response(response_body, status=HTTP_200_OK, headers=headers)
+
+    @action(detail=False)
+    def algolia_key(self, request, *args, **kwargs):
+        """
+        Returns an Algolia API key that is secured to only allow searching for
+        objects associated with enterprise customers that the user is linked to.
+
+        This endpoint is used with `frontend-app-learner-portal-enterprise` MFE
+        currently.
+        """
+
+        if not (api_key := getattr(settings, "ENTERPRISE_ALGOLIA_SEARCH_API_KEY", "")):
+            LOGGER.warning("Algolia search API key is not configured. To enable this view, "
+                           "set `ENTERPRISE_ALGOLIA_SEARCH_API_KEY` in settings.")
+            raise Http404
+
+        queryset = self.queryset.filter(
+            **{
+                self.USER_ID_FILTER: request.user.id,
+                "enterprise_customer_users__linked": True
+            }
+        ).values_list("uuid", flat=True)
+
+        if len(queryset) == 0:
+            raise NotFound(_("User is not linked to any enterprise customers."))
+
+        secured_key = SearchClient.generate_secured_api_key(
+            api_key,
+            {
+                "filters": " OR ".join(
+                    f"enterprise_customer_uuids:{enterprise_customer_uuid}"
+                    for enterprise_customer_uuid
+                    in queryset
+                ),
+            }
+        )
+
+        return Response({"key": secured_key}, status=HTTP_200_OK)
 
 
 class EnterpriseCourseEnrollmentViewSet(EnterpriseReadWriteModelViewSet):

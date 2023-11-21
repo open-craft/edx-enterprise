@@ -4,6 +4,8 @@
 #
 #    make upgrade
 #
+algoliasearch==2.6.3
+    # via -r requirements/test-master.txt
     # via
     #   -r requirements/test-master.txt
     #   kombu
@@ -287,6 +289,7 @@ pyyaml==6.0
 requests==2.27.1
     # via
     #   -r requirements/test-master.txt
+    #   algoliasearch
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   pyjwkest
