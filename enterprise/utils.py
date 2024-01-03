@@ -59,8 +59,10 @@ except ImportError:
 
 try:
     from common.djangoapps.course_modes.models import CourseMode
+    from common.djangoapps.student.models import CourseEnrollmentAllowed
 except ImportError:
     CourseMode = None
+    CourseEnrollmentAllowed = None
 
 try:
     from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
@@ -1739,12 +1741,15 @@ def enroll_user(enterprise_customer, user, course_mode, *course_ids, **kwargs):
         user: The user model object who needs to be enrolled in the course
         course_mode: The string representation of the mode with which the enrollment should be created
         *course_ids: An iterable containing any number of course IDs to eventually enroll the user in.
-        kwargs: Should contain enrollment_client if it's already been instantiated and should be passed in.
+        kwargs: Contains optional params such as:
+            - enrollment_client, if it's already been instantiated and should be passed in
+            - force_enrollment, if the course is "Invite Only" and the "force_enrollment" is needed
 
     Returns:
         Boolean: Whether or not enrollment succeeded for all courses specified
     """
     enrollment_client = kwargs.pop('enrollment_client', None)
+    force_enrollment = kwargs.pop('force_enrollment', False)
     if not enrollment_client:
         from enterprise.api_client.lms import EnrollmentApiClient  # pylint: disable=import-outside-toplevel
         enrollment_client = EnrollmentApiClient()
@@ -1759,7 +1764,8 @@ def enroll_user(enterprise_customer, user, course_mode, *course_ids, **kwargs):
                 user.username,
                 course_id,
                 course_mode,
-                enterprise_uuid=str(enterprise_customer_user.enterprise_customer.uuid)
+                enterprise_uuid=str(enterprise_customer_user.enterprise_customer.uuid),
+                force_enrollment=force_enrollment,
             )
         except HttpClientError as exc:
             # Check if user is already enrolled then we should ignore exception
@@ -2112,6 +2118,7 @@ def enroll_users_in_course(
         enrollment_reason=None,
         discount=0.0,
         sales_force_id=None,
+        force_enrollment=False,
 ):
     """
     Enroll existing users in a course, and create a pending enrollment for nonexisting users.
@@ -2125,6 +2132,7 @@ def enroll_users_in_course(
         enrollment_reason (str): A reason for enrollment.
         discount (Decimal): Percentage discount for enrollment.
         sales_force_id (str): Salesforce opportunity id.
+        force_enrollment (bool): Force enrollment into 'Invite Only' courses.
 
     Returns:
         successes: A list of users who were successfully enrolled in the course.
@@ -2141,7 +2149,7 @@ def enroll_users_in_course(
     failures = []
 
     for user in existing_users:
-        succeeded = enroll_user(enterprise_customer, user, course_mode, course_id)
+        succeeded = enroll_user(enterprise_customer, user, course_mode, course_id, force_enrollment=force_enrollment)
         if succeeded:
             successes.append(user)
             if enrollment_requester and enrollment_reason:
@@ -2351,7 +2359,6 @@ def get_md5_hash(content):
     Get the MD5 hash digest of the given content.
 
     Arguments:
-        content (str): Content in string format for calculating MD5 hash digest.
 
     Returns:
         (str): MD5 hash digest.
@@ -2365,3 +2372,48 @@ def camelCase(string):
     """
     output = ''.join(x for x in string.title() if x.isalnum())
     return output[0].lower() + output[1:]
+
+
+def hide_price_when_zero(enterprise_customer, course_modes):
+    """
+    Adds a "hide_price" flag to the course modes if price is zero and "Hide course price when zero" flag is set.
+
+    Arguments:
+        enterprise_customer: The EnterpriseCustomer that the enrollemnt is being done.
+        course_modes: iterable with dictionaries containing a required 'final_price' key
+    """
+    if not enterprise_customer.hide_course_price_when_zero:
+        return course_modes
+
+    for mode in course_modes:
+        mode['hide_price'] = False
+        try:
+            numbers = re.findall(r'\d+', mode['final_price'])
+            mode['hide_price'] = int(''.join(numbers)) == 0
+        except ValueError:
+            LOGGER.warning(
+                'hide_price_when_zero: Could not convert price "%s" of course mode "%s" to int.',
+                mode['final_price'],
+                mode['title']
+            )
+    return course_modes
+
+
+def ensure_course_enrollment_is_allowed(course_id, email, enrollment_api_client):
+    """
+    Create a CourseEnrollmentAllowed object for invitation-only courses.
+
+    Arguments:
+        course_id (str): ID of the course to allow enrollment
+        email (str): email of the user whose enrollment should be allowed
+        enrollment_api_client (:class:`enterprise.api_client.lms.EnrollmentApiClient`): Enrollment API Client
+    """
+    if not CourseEnrollmentAllowed:
+        raise NotConnectedToOpenEdX()
+
+    course_details = enrollment_api_client.get_course_details(course_id)
+    if course_details["invite_only"]:
+        CourseEnrollmentAllowed.objects.update_or_create(
+            course_id=course_id,
+            email=email,
+        )

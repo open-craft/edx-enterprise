@@ -83,14 +83,20 @@ from enterprise.validators import (
 )
 
 try:
-    from common.djangoapps.student.models import CourseEnrollment
+    from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
 except ImportError:
     CourseEnrollment = None
+    CourseEnrollmentAllowed = None
 
 try:
     from common.djangoapps.entitlements.models import CourseEntitlement
 except ImportError:
     CourseEntitlement = None
+
+try:
+    from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+except ImportError:
+    CourseOverview = None
 
 LOGGER = getEnterpriseLogger(__name__)
 User = auth.get_user_model()
@@ -470,6 +476,11 @@ class EnterpriseCustomer(TimeStampedModel):
         help_text=_("Email address that will receive learner replies to automated edX emails.")
     )
 
+    hide_course_price_when_zero = models.BooleanField(
+        default=False,
+        help_text=_("Specify whether course cost should be hidden in the landing page when the final price is zero.")
+    )
+
     enable_generation_of_api_credentials = models.BooleanField(
         verbose_name="Allow generation of API credentials",
         default=False,
@@ -480,6 +491,14 @@ class EnterpriseCustomer(TimeStampedModel):
         help_text=_(
             'Message text shown on the learner portal dashboard for career engagement network.'
         ),
+    )
+
+    allow_enrollment_in_invite_only_courses = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Specifies if learners are allowed to enroll into courses marked as 'invitation-only', "
+            "when they attempt to enroll from the landing page."
+        )
     )
 
     @property
@@ -744,7 +763,21 @@ class EnterpriseCustomer(TimeStampedModel):
             license_uuid = None
 
         new_enrollments = {}
+        enrollment_api_client = EnrollmentApiClient()
+
         for course_id in course_ids:
+            # Check if the course is "Invite Only" and add CEA if it is.
+            course_details = enrollment_api_client.get_course_details(course_id)
+
+            if course_details["invite_only"]:
+                if not CourseEnrollmentAllowed:
+                    raise NotConnectedToOpenEdX()
+
+                CourseEnrollmentAllowed.objects.update_or_create(
+                    email=email,
+                    course_id=course_id
+                )
+
             __, created = PendingEnrollment.objects.update_or_create(
                 user=pending_ecu,
                 course_id=course_id,
@@ -1855,9 +1888,59 @@ class EnterpriseCourseEnrollmentManager(models.Manager):
         """
         Override to return only those enrollment records for which learner is linked to an enterprise.
         """
+
         return super().get_queryset().select_related('enterprise_customer_user').filter(
             enterprise_customer_user__linked=True
         )
+
+
+class EnterpriseCourseEnrollmentWithAdditionalFieldsManager(models.Manager):
+    """
+    Model manager for `EnterpriseCourseEnrollment`.
+    """
+
+    def get_queryset(self):
+        """
+        Override to return only those enrollment records for which learner is linked to an enterprise.
+        """
+
+        return super().get_queryset().select_related('enterprise_customer_user').filter(
+            enterprise_customer_user__linked=True
+        ).annotate(**self._get_additional_data_annotations())
+
+    def _get_additional_data_annotations(self):
+        """
+        Return annotations with additional data for the queryset.
+        Additional fields are None in the test environment, where platform models are not available.
+        """
+
+        if not CourseEnrollment or not CourseOverview:
+            return {
+                'enrollment_track': models.Value(None, output_field=models.CharField()),
+                'enrollment_date': models.Value(None, output_field=models.DateTimeField()),
+                'user_email': models.Value(None, output_field=models.EmailField()),
+                'course_start': models.Value(None, output_field=models.DateTimeField()),
+                'course_end': models.Value(None, output_field=models.DateTimeField()),
+            }
+
+        enrollment_subquery = CourseEnrollment.objects.filter(
+            user=models.OuterRef('enterprise_customer_user__user_id'),
+            course_id=models.OuterRef('course_id'),
+        )
+        user_subquery = auth.get_user_model().objects.filter(
+            id=models.OuterRef('enterprise_customer_user__user_id'),
+        ).values('email')[:1]
+        course_subquery = CourseOverview.objects.filter(
+            id=models.OuterRef('course_id'),
+        )
+
+        return {
+            'enrollment_track': models.Subquery(enrollment_subquery.values('mode')[:1]),
+            'enrollment_date': models.Subquery(enrollment_subquery.values('created')[:1]),
+            'user_email': models.Subquery(user_subquery),
+            'course_start': models.Subquery(course_subquery.values('start')[:1]),
+            'course_end': models.Subquery(course_subquery.values('end')[:1]),
+        }
 
 
 class EnterpriseCourseEnrollment(TimeStampedModel):
@@ -1879,11 +1962,12 @@ class EnterpriseCourseEnrollment(TimeStampedModel):
     """
 
     objects = EnterpriseCourseEnrollmentManager()
+    with_additional_fields = EnterpriseCourseEnrollmentWithAdditionalFieldsManager()
 
     class Meta:
         unique_together = (('enterprise_customer_user', 'course_id',),)
         app_label = 'enterprise'
-        ordering = ['created']
+        ordering = ['id']
 
     enterprise_customer_user = models.ForeignKey(
         EnterpriseCustomerUser,

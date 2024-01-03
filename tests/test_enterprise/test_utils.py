@@ -15,15 +15,18 @@ from django.forms.models import model_to_dict
 from enterprise.models import EnterpriseCourseEnrollment, LicensedEnterpriseCourseEnrollment
 from enterprise.utils import (
     enroll_subsidy_users_in_courses,
+    ensure_course_enrollment_is_allowed,
     get_default_invite_key_expiration_date,
     get_idiff_list,
     get_platform_logo_url,
+    hide_price_when_zero,
     is_pending_user,
     localized_utcnow,
     parse_lms_api_datetime,
     serialize_notification_content,
 )
 from test_utils import FAKE_UUIDS, TEST_PASSWORD, TEST_USERNAME, factories
+from test_utils.fake_enrollment_api import get_course_details
 
 LMS_BASE_URL = 'https://lms.base.url'
 
@@ -420,11 +423,12 @@ class TestUtils(unittest.TestCase):
         )
         licensed_users_info = [{
             'email': 'pending-user-email@example.com',
-            'course_run_key': 'course-key-v1',
+            'course_run_key': 'course-v1:edX+DemoX+Demo_Course',
             'course_mode': 'verified',
             'license_uuid': '5b77bdbade7b4fcb838f8111b68e18ae'
         }]
-        result = enroll_subsidy_users_in_courses(ent_customer, licensed_users_info)
+        with mock.patch("enterprise.models.EnrollmentApiClient.get_course_details", wraps=get_course_details):
+            result = enroll_subsidy_users_in_courses(ent_customer, licensed_users_info)
 
         self.assertEqual(result['pending'][0]['email'], 'pending-user-email@example.com')
         self.assertFalse(result['successes'])
@@ -516,3 +520,50 @@ class TestUtils(unittest.TestCase):
         expiration_date = get_default_invite_key_expiration_date()
         expected_expiration_date = current_time + timedelta(days=365)
         self.assertEqual(expiration_date.date(), expected_expiration_date.date())
+
+    @ddt.data(True, False)
+    def test_hide_course_price_when_zero(self, hide_price):
+        customer = factories.EnterpriseCustomerFactory()
+        zero_modes = [
+            {"final_price": "$0"},
+            {"final_price": "$0.000"},
+            {"final_price": "Rs. 0.00"},
+            {"final_price": "0.00 EURO"},
+        ]
+        non_zero_modes = [
+            {"final_price": "$100"},
+            {"final_price": "$73.50"},
+            {"final_price": "Rs.8000.00"},
+            {"final_price": "4000 Euros"},
+        ]
+        customer.hide_course_price_when_zero = hide_price
+
+        processed_zero_modes = hide_price_when_zero(customer, zero_modes)
+        processed_non_zero_modes = hide_price_when_zero(customer, non_zero_modes)
+
+        if hide_price:
+            self.assertTrue(all(mode["hide_price"] for mode in processed_zero_modes))
+            self.assertFalse(all(mode["hide_price"] for mode in processed_non_zero_modes))
+        else:
+            self.assertEqual(zero_modes, processed_zero_modes)
+            self.assertEqual(non_zero_modes, processed_non_zero_modes)
+
+    @ddt.data(True, False)
+    @mock.patch("enterprise.utils.CourseEnrollmentAllowed")
+    def test_ensure_course_enrollment_is_allowed(self, invite_only, mock_cea):
+        """
+        Test that the CourseEnrollmentAllowed is created only for the "invite_only" courses.
+        """
+        self.create_user()
+        mock_enrollment_api = mock.Mock()
+        mock_enrollment_api.get_course_details.return_value = {"invite_only": invite_only}
+
+        ensure_course_enrollment_is_allowed("test-course-id", self.user.email, mock_enrollment_api)
+
+        if invite_only:
+            mock_cea.objects.update_or_create.assert_called_with(
+                course_id="test-course-id",
+                email=self.user.email
+            )
+        else:
+            mock_cea.objects.update_or_create.assert_not_called()
