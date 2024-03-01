@@ -4485,6 +4485,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         },
     )
     @ddt.unpack
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.track_enrollment')
     @mock.patch("enterprise.models.EnterpriseCustomer.notify_enrolled_learners")
@@ -4495,6 +4496,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_notify_task,
         mock_track_enroll,
         mock_get_course_mode,
+        mock_get_course_details,
         body,
         expected_code,
         expected_response,
@@ -4515,6 +4517,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         permission = Permission.objects.get(name='Can add Enterprise Customer')
         self.user.user_permissions.add(permission)
         mock_get_course_mode.return_value = VERIFIED_SUBSCRIPTION_COURSE_MODE
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
 
         self.assertEqual(len(PendingEnrollment.objects.all()), 0)
 
@@ -4547,6 +4550,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         # no notifications to be sent unless 'notify' specifically asked for in payload
         mock_notify_task.assert_not_called()
 
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.track_enrollment')
     @mock.patch('enterprise.models.EnterpriseCustomer.notify_enrolled_learners')
@@ -4557,6 +4561,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_notify_task,
         mock_track_enroll,
         mock_get_course_mode,
+        mock_get_course_details,
     ):
         """
         Tests the bulk enrollment endpoint at enroll_learners_in_courses.
@@ -4564,6 +4569,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         This tests the case where existing users are supplied, so the enrollments are fulfilled rather than pending.
         """
         mock_update_or_create_enrollment.return_value = True
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
 
         user_one = factories.UserFactory(is_active=True)
         user_two = factories.UserFactory(is_active=True)
@@ -4634,6 +4640,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
 
         assert mock_update_or_create_enrollment.call_count == 2
 
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.track_enrollment')
     @mock.patch('enterprise.models.EnterpriseCustomer.notify_enrolled_learners')
@@ -4642,12 +4649,15 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_notify_task,
         mock_track_enroll,
         mock_get_course_mode,
+        mock_get_course_details,
     ):
         """
         Tests the bulk enrollment endpoint at enroll_learners_in_courses.
 
         This tests the case where a non-existent user_id is supplied, so an error should occur.
         """
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
+
         user = factories.UserFactory(is_active=True)
 
         factories.EnterpriseCustomerFactory(
@@ -4706,6 +4716,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         },
     )
     @ddt.unpack
+    @mock.patch("enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys")
     @mock.patch("enterprise.api.v1.views.enterprise_subsidy_fulfillment.enrollment_api")
     @mock.patch(
         'enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key'
@@ -4716,6 +4727,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_platform_enrollment,
         mock_get_course_mode,
         mock_update_or_create_enrollment,
+        mock_get_course_details,
         old_transaction_id,
         new_transaction_id,
     ):
@@ -4725,6 +4737,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         """
         mock_platform_enrollment.return_value = True
         mock_get_course_mode.return_value = VERIFIED_SUBSCRIPTION_COURSE_MODE
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
         # Needed for the cancel endpoint:
         mock_update_or_create_enrollment.update_enrollment.return_value = mock.Mock()
 
@@ -4827,12 +4840,14 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         },
     )
     @ddt.unpack
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
     @mock.patch('enterprise.utils.lms_update_or_create_enrollment')
     def test_bulk_enrollment_includes_fulfillment_source_uuid(
         self,
         mock_get_course_mode,
         mock_update_or_create_enrollment,
+        mock_get_course_details,
         body,
         fulfillment_source,
     ):
@@ -4841,6 +4856,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         generated subsidized enrollment uuid value as part of the response payload.
         """
         mock_update_or_create_enrollment.return_value = True
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
 
         user, _, enterprise_customer = self._create_user_and_enterprise_customer(
             body.get('enrollments_info')[0].get('email'), 'test_password'
@@ -4937,6 +4953,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         },
     )
     @ddt.unpack
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.track_enrollment')
     @mock.patch("enterprise.models.EnterpriseCustomer.notify_enrolled_learners")
@@ -4945,6 +4962,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_notify_task,
         mock_track_enroll,
         mock_get_course_mode,
+        mock_get_course_details,
         body,
         expected_code,
         expected_response,
@@ -4964,6 +4982,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         permission = Permission.objects.get(name='Can add Enterprise Customer')
         self.user.user_permissions.add(permission)
         mock_get_course_mode.return_value = VERIFIED_SUBSCRIPTION_COURSE_MODE
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
 
         self.assertEqual(len(PendingEnrollment.objects.all()), 0)
 
@@ -5011,12 +5030,72 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
 
         mock_notify_task.assert_has_calls(mock_calls, any_order=True)
 
+    @mock.patch('enterprise.utils.CourseEnrollmentAllowed')
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
+    @mock.patch('enterprise.utils.lms_update_or_create_enrollment')
+    def test_bulk_enrollment_invitation_only(
+        self,
+        mock_update_or_create_enrollment,
+        mock_get_course_mode,
+        mock_get_course_details,
+        mock_cea,
+    ):
+        """
+        Tests that bulk enrollment endpoint creates CourseEnrollmentAllowed object when enterprise customer allows
+        enrollment in invitation only courses and the course is invitation only.
+        """
+        mock_update_or_create_enrollment.return_value = True
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = True
+        mock_get_course_mode.return_value = VERIFIED_SUBSCRIPTION_COURSE_MODE
+
+        user, _, enterprise_customer = self._create_user_and_enterprise_customer("abc@test.com", "test_password")
+        course_id = 'course-v1:edX+DemoX+Demo_Course'
+        body = {
+            'enrollments_info': [
+                {
+                    'user_id': user.id,
+                    'course_run_key': course_id,
+                    'license_uuid': '5a88bdcade7c4ecb838f8111b68e18ac'
+                },
+            ]
+        }
+
+        def enroll():
+            self.client.post(
+                settings.TEST_SERVER + reverse(
+                    'enterprise-customer-enroll-learners-in-courses', (enterprise_customer.uuid,)
+                ),
+                data=json.dumps(body),
+                content_type='application/json',
+            )
+
+        enroll()
+        mock_cea.objects.update_or_create.assert_not_called()
+
+        enterprise_customer.allow_enrollment_in_invite_only_courses = True
+        enterprise_customer.save()
+
+        enroll()
+        mock_cea.objects.update_or_create.assert_called_with(
+            course_id=course_id,
+            email=user.email
+        )
+
+    @mock.patch('enterprise.api.v1.views.enterprise_customer.get_course_details_from_course_keys')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.enroll_subsidy_users_in_courses')
     @mock.patch('enterprise.api.v1.views.enterprise_customer.get_best_mode_from_course_key')
-    def test_enroll_learners_in_courses_partial_failure(self, mock_get_course_mode, mock_enroll_user):
+    def test_enroll_learners_in_courses_partial_failure(
+        self,
+        mock_get_course_mode,
+        mock_enroll_user,
+        mock_get_course_details,
+    ):
         """
         Tests that bulk users bulk enrollment endpoint properly handles partial failures.
         """
+        mock_get_course_details.return_value.__getitem__.return_value.invitation_only = True
+
         ent_customer = factories.EnterpriseCustomerFactory(
             uuid=FAKE_UUIDS[0],
             name="test_enterprise"
