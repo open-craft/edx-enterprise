@@ -58,6 +58,11 @@ except ImportError:
     CourseEnrollmentError = None
 
 try:
+    from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+except ImportError:
+    CourseOverview = None
+
+try:
     from common.djangoapps.course_modes.models import CourseMode
     from common.djangoapps.student.models import CourseEnrollmentAllowed
 except ImportError:
@@ -1979,6 +1984,7 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
         user_id = subsidy_user_info.get('user_id')
         user_email = subsidy_user_info['email'].strip().lower() if 'email' in subsidy_user_info else None
         course_mode = subsidy_user_info.get('course_mode')
+        invitation_only = subsidy_user_info.get('invitation_only')
         course_run_key = subsidy_user_info.get('course_run_key')
         license_uuid = subsidy_user_info.get('license_uuid')
         transaction_id = subsidy_user_info.get('transaction_id')
@@ -2005,6 +2011,12 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
                 enrollment_source = enterprise_enrollment_source_model().get_source(
                     enterprise_enrollment_source_model().CUSTOMER_ADMIN
                 )
+                if invitation_only and enterprise_customer.allow_enrollment_in_invite_only_courses:
+                    CourseEnrollmentAllowed.objects.update_or_create(
+                        course_id=course_run_key,
+                        email=user.email,
+                    )
+
                 succeeded, created, source_uuid = customer_admin_enroll_user_with_status(
                     enterprise_customer,
                     user,
@@ -2241,6 +2253,14 @@ def get_best_mode_from_course_key(course_key):
     if best_mode := [mode for mode in BEST_MODE_ORDER if mode in course_modes]:
         return best_mode[0]
     return CourseModes.AUDIT
+
+
+def get_course_details_from_course_keys(course_keys):
+    """
+    Helper to get a mapping of course keys to course details.
+    """
+    course_overviews = CourseOverview.objects.filter(id__in=course_keys)
+    return {str(course_overview.id): course_overview for course_overview in course_overviews}
 
 
 def parse_lms_api_datetime(datetime_string, datetime_format=LMS_API_DATETIME_FORMAT):
