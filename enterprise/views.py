@@ -690,6 +690,16 @@ class GrantDataSharingPermissions(View):
                             course_modes=course_mode
                         )
                     )
+
+                    if enterprise_customer.allow_enrollment_in_invite_only_courses:
+                        ensure_course_enrollment_is_allowed(course_id, request.user.email, enrollment_api_client)
+                        LOGGER.info(
+                            'User {user} is allowed to enroll in Course {course_id}.'.format(
+                                user=request.user.username,
+                                course_id=course_id
+                            )
+                        )
+
                     try:
                         enrollment_api_client.enroll_user_in_course(
                             request.user.username,
