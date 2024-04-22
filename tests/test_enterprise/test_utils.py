@@ -534,9 +534,9 @@ class TestUtils(unittest.TestCase):
         ensure_course_enrollment_is_allowed("test-course-id", self.user.email, mock_enrollment_api)
 
         if invite_only:
-            mock_enrollment_api.return_value.allow_enrollment.assert_called_with(
-                email=self.user.email,
-                course_id="test-course-id",
+            mock_enrollment_api.allow_enrollment.assert_called_with(
+                self.user.email,
+                "test-course-id",
             )
         else:
-            mock_enrollment_api.return_value.allow_enrollment.assert_not_called()
+            mock_enrollment_api.allow_enrollment.assert_not_called()
