@@ -1663,8 +1663,8 @@ class TestCourseEnrollmentView(EmbargoAPIMixin, EnterpriseViewMixin, MessagesMix
         )
 
         enrollment_api_client_mock.return_value.allow_enrollment.assert_called_with(
-            email=self.user.email,
-            course_id=course_id,
+            self.user.email,
+            course_id,
         )
         assert response.status_code == 302
 
