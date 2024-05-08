@@ -2339,19 +2339,14 @@ def hide_price_when_zero(enterprise_customer, course_modes):
 
 def ensure_course_enrollment_is_allowed(course_id, email, enrollment_api_client):
     """
-    Create a CourseEnrollmentAllowed object for invitation-only courses.
+    Calls the enrollment API to create a CourseEnrollmentAllowed object for
+    invitation-only courses.
 
     Arguments:
         course_id (str): ID of the course to allow enrollment
         email (str): email of the user whose enrollment should be allowed
         enrollment_api_client (:class:`enterprise.api_client.lms.EnrollmentApiClient`): Enrollment API Client
     """
-    if not CourseEnrollmentAllowed:
-        raise NotConnectedToOpenEdX()
-
     course_details = enrollment_api_client.get_course_details(course_id)
     if course_details["invite_only"]:
-        CourseEnrollmentAllowed.objects.update_or_create(
-            course_id=course_id,
-            email=email,
-        )
+        enrollment_api_client.allow_enrollment(email, course_id)
