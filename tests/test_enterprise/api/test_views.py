@@ -4512,7 +4512,6 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
         mock_update_or_create_enrollment.return_value = True
         mock_get_course_details.return_value.__getitem__.return_value.invitation_only = False
 
-
         user_one = factories.UserFactory(is_active=True)
         user_two = factories.UserFactory(is_active=True)
 
@@ -5001,6 +5000,7 @@ class TestBulkEnrollment(BaseTestEnterpriseAPIViews):
                 },
             ]
         }
+
         def enroll():
             self.client.post(
                 settings.TEST_SERVER + reverse(
