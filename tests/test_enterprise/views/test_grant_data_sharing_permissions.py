@@ -17,6 +17,7 @@ from django.http import HttpResponse
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from enterprise.constants import CourseModes
 from enterprise.models import EnterpriseCourseEnrollment, LicensedEnterpriseCourseEnrollment
 from enterprise.views import FAILED_ENROLLMENT_REASON_QUERY_PARAM, VERIFIED_MODE_UNAVAILABLE, add_reason_to_failure_url
 from integrated_channels.exceptions import ClientError
@@ -990,6 +991,72 @@ class TestGrantDataSharingPermissions(MessagesMixin, TestCase):
         assert LicensedEnterpriseCourseEnrollment.objects.filter(
             license_uuid=license_uuid,
         ).exists() is False
+
+    @mock.patch('enterprise.views.render', side_effect=fake_render)
+    @mock.patch('enterprise.views.EnrollmentApiClient')
+    @mock.patch('enterprise.models.EnterpriseCatalogApiClient')
+    @mock.patch('enterprise.api_client.discovery.CourseCatalogApiServiceClient')
+    @mock.patch('enterprise.views.get_best_mode_from_course_key')
+    @mock.patch('enterprise.views.ensure_course_enrollment_is_allowed')
+    @ddt.data(True, False)
+    def test_get_invite_only_enrollment(
+            self,
+            enrollment_allowed,
+            course_enrollment_allowed_mock,
+            best_mode_mock,
+            course_catalog_api_client_mock,
+            enterprise_catalog_client_mock,
+            enrollment_api_client_mock,
+            *args,
+    ):
+        course_id = 'course-v1:edX+DemoX+Demo_Course'
+        content_filter = {'key': [course_id]}
+        course_run_details = {
+            'start': '2013-02-05T05:00:00Z',
+            'title': 'Demo Course',
+        }
+
+        enterprise_catalog_client_mock.return_value.enterprise_contains_content_items.return_value = True
+
+        mock_discovery_catalog_api_client = course_catalog_api_client_mock.return_value
+        mock_discovery_catalog_api_client.get_course_id.return_value = course_id
+        mock_discovery_catalog_api_client.get_course_run.return_value = course_run_details
+        mock_discovery_catalog_api_client.get_course_details.return_value = course_run_details
+
+        mock_enrollment_api_client = enrollment_api_client_mock.return_value
+        mock_enrollment_api_client.get_course_enrollment.return_value = None
+
+        best_mode_mock.return_value = CourseModes.NO_ID_PROFESSIONAL
+
+        self._login()
+        enterprise_customer = EnterpriseCustomerFactory(
+            name='Starfleet Academy',
+            enable_data_sharing_consent=False,
+            allow_enrollment_in_invite_only_courses=enrollment_allowed,
+        )
+        EnterpriseCustomerCatalogFactory(
+            enterprise_customer=enterprise_customer,
+            content_filter=content_filter
+        )
+        EnterpriseCustomerUserFactory(
+            user_id=self.user.id,
+            enterprise_customer=enterprise_customer
+        )
+        license_uuid = str(uuid.uuid4())
+        params = {
+            'enterprise_customer_uuid': str(enterprise_customer.uuid),
+            'course_id': course_id,
+            'next': 'https://enrollment-succeeded.com',
+            'failure_url': 'https://enrollment-failed.com',
+            'license_uuid': license_uuid,
+        }
+        response = self.client.get(self.url, data=params)
+        assert response.status_code == 302
+        assert response.url == 'https://enrollment-succeeded.com'
+        if enrollment_allowed:
+            course_enrollment_allowed_mock.assert_called()
+        else:
+            course_enrollment_allowed_mock.assert_not_called()
 
 
 @mark.django_db
