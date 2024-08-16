@@ -17,6 +17,7 @@ from enterprise.constants import MAX_ALLOWED_TEXT_LENGTH
 from enterprise.models import EnterpriseCourseEnrollment, LicensedEnterpriseCourseEnrollment
 from enterprise.utils import (
     enroll_subsidy_users_in_courses,
+    ensure_course_enrollment_is_allowed,
     get_default_invite_key_expiration_date,
     get_idiff_list,
     get_platform_logo_url,
@@ -525,6 +526,69 @@ class TestUtils(unittest.TestCase):
         )
         self.assertEqual(len(EnterpriseCourseEnrollment.objects.all()), 0)
 
+    @ddt.unpack
+    @ddt.data(
+        (True, True),
+        (True, False),
+        (False, True),
+        (False, False),
+    )
+    @mock.patch('enterprise.utils.lms_update_or_create_enrollment')
+    @mock.patch('enterprise.utils.ensure_course_enrollment_is_allowed')
+    def test_enroll_subsidy_users_in_courses_for_invite_only_courses(
+        self,
+        invite_only,
+        enrollment_allowed,
+        mock_ensure_course_enrollment_is_allowed,
+        mock_update_or_create_enrollment,
+    ):
+        """
+        Test that the users ensure_course_enrollemnt_is_allowed is called for
+        invitiation-only courses when the enterprise_customer has the flag enabled.
+        """
+        self.create_user()
+
+        ent_customer = factories.EnterpriseCustomerFactory(
+            uuid=FAKE_UUIDS[0],
+            name="test_enterprise",
+            allow_enrollment_in_invite_only_courses=enrollment_allowed,
+        )
+        factories.EnterpriseCustomerUserFactory(
+            user_id=self.user.id,
+            enterprise_customer=ent_customer,
+        )
+        licensed_users_info = [{
+            'email': self.user.email,
+            'course_run_key': 'course-key-v1',
+            'course_mode': 'verified',
+            'license_uuid': '5b77bdbade7b4fcb838f8111b68e18ae',
+            'invitation_only': invite_only,
+        }]
+
+        mock_update_or_create_enrollment.return_value = True
+        result = enroll_subsidy_users_in_courses(ent_customer, licensed_users_info)
+        self.assertEqual(
+            {
+                'pending': [],
+                'successes': [{
+                    'user_id': self.user.id,
+                    'email': self.user.email,
+                    'course_run_key': 'course-key-v1',
+                    'user': self.user,
+                    'created': True,
+                    'activation_link': None,
+                    'enterprise_fulfillment_source_uuid': LicensedEnterpriseCourseEnrollment.objects.first().uuid,
+                }],
+                'failures': []
+            },
+            result
+        )
+        self.assertEqual(len(EnterpriseCourseEnrollment.objects.all()), 1)
+        if invite_only and enrollment_allowed:
+            mock_ensure_course_enrollment_is_allowed.assert_called()
+        else:
+            mock_ensure_course_enrollment_is_allowed.assert_not_called()
+
     def test_enroll_pending_licensed_users_in_courses_succeeds(self):
         """
         Test that users that do not exist are pre-enrolled by enroll_subsidy_users_in_courses and returned under the
@@ -650,3 +714,22 @@ class TestUtils(unittest.TestCase):
         (truncated_string, was_truncated) = truncate_string(test_string_2)
         self.assertTrue(was_truncated)
         self.assertEqual(len(truncated_string), MAX_ALLOWED_TEXT_LENGTH)
+
+    @ddt.data(True, False)
+    def test_ensure_course_enrollment_is_allowed(self, invite_only):
+        """
+        Test that the enrollment allow endpoint is called for the "invite_only" courses.
+        """
+        self.create_user()
+        mock_enrollment_api = mock.Mock()
+        mock_enrollment_api.get_course_details.return_value = {"invite_only": invite_only}
+
+        ensure_course_enrollment_is_allowed("test-course-id", self.user.email, mock_enrollment_api)
+
+        if invite_only:
+            mock_enrollment_api.allow_enrollment.assert_called_with(
+                self.user.email,
+                "test-course-id",
+            )
+        else:
+            mock_enrollment_api.allow_enrollment.assert_not_called()

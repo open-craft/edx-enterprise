@@ -180,6 +180,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "enable_academies",
                 "enable_one_academy",
                 "groups",
+                "allow_enrollment_in_invite_only_courses",
             ]
         ),
         (
