@@ -365,7 +365,7 @@ edx-django-utils==5.15.0
     #   edx-rest-api-client
     #   edx-toggles
     #   openedx-events
-edx-drf-extensions==10.3.0
+edx-drf-extensions==10.4.0
     # via
     #   -r requirements/doc.txt
     #   -r requirements/test-master.txt
@@ -375,7 +375,7 @@ edx-i18n-tools==1.6.3
     # via -r requirements/dev.in
 edx-lint==5.4.0
     # via -r requirements/dev.in
-edx-opaque-keys[django]==2.10.0
+edx-opaque-keys[django]==2.11.0
     # via
     #   -r requirements/doc.txt
     #   -r requirements/test-master.txt

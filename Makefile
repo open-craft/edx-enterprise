@@ -99,6 +99,7 @@ check_pins: $(COMMON_CONSTRAINTS_TXT) ## check that our local copy of edx-platfo
 	sed -i.tmp '/^vine==/d' $(LOCAL_EDX_PINS)
 	sed -i.tmp '/^django-simple-history==/d' $(LOCAL_EDX_PINS)
 	sed -i.tmp '/^edx-opaque-keys\[django\]/d' $(LOCAL_EDX_PINS)
+	sed -i.tmp '/^edx-drf-extensions==/d' $(LOCAL_EDX_PINS)	
 
 	rm requirements/*.txt.tmp
 	python requirements/check_pins.py requirements/test-master.txt $(LOCAL_EDX_PINS)

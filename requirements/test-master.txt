@@ -230,14 +230,12 @@ edx-django-utils==5.15.0
     #   edx-rest-api-client
     #   edx-toggles
     #   openedx-events
-edx-drf-extensions==10.3.0
+edx-drf-extensions==10.4.0
     # via
-    #   -c requirements/edx-platform-constraints.txt
     #   -r requirements/base.in
     #   edx-rbac
-edx-opaque-keys[django]==2.10.0
+edx-opaque-keys[django]==2.11.0
     # via
-    #   -c requirements/edx-platform-constraints.txt
     #   -r requirements/base.in
     #   edx-ccx-keys
     #   edx-drf-extensions
