@@ -495,8 +495,7 @@ class TestUtils(unittest.TestCase):
         assert email_items == expected_email_items
 
     @ddt.data(True, False)
-    @mock.patch("enterprise.utils.CourseEnrollmentAllowed")
-    def test_ensure_course_enrollment_is_allowed(self, invite_only, mock_cea):
+    def test_ensure_course_enrollment_is_allowed(self, invite_only):
         """
         Test that the enrollment allow endpoint is called for the "invite_only" courses.
         """
