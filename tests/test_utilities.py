@@ -168,7 +168,6 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "system_wide_role_assignments",
                 "reply_to",
                 "hide_labor_market_data",
-                "hide_course_price_when_zero",
             ]
         ),
         (
