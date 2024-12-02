@@ -17,7 +17,6 @@ from enterprise.utils import (
     ensure_course_enrollment_is_allowed,
     get_idiff_list,
     get_platform_logo_url,
-    hide_price_when_zero,
     is_pending_user,
     parse_lms_api_datetime,
     serialize_notification_content,
@@ -494,33 +493,6 @@ class TestUtils(unittest.TestCase):
 
         expected_email_items = [expected_email_item(user, activation_links) for user in users]
         assert email_items == expected_email_items
-
-    @ddt.data(True, False)
-    def test_hide_course_price_when_zero(self, hide_price):
-        customer = factories.EnterpriseCustomerFactory()
-        zero_modes = [
-            {"final_price": "$0"},
-            {"final_price": "$0.000"},
-            {"final_price": "Rs. 0.00"},
-            {"final_price": "0.00 EURO"},
-        ]
-        non_zero_modes = [
-            {"final_price": "$100"},
-            {"final_price": "$73.50"},
-            {"final_price": "Rs.8000.00"},
-            {"final_price": "4000 Euros"},
-        ]
-        customer.hide_course_price_when_zero = hide_price
-
-        processed_zero_modes = hide_price_when_zero(customer, zero_modes)
-        processed_non_zero_modes = hide_price_when_zero(customer, non_zero_modes)
-
-        if hide_price:
-            self.assertTrue(all(mode["hide_price"] for mode in processed_zero_modes))
-            self.assertFalse(all(mode["hide_price"] for mode in processed_non_zero_modes))
-        else:
-            self.assertEqual(zero_modes, processed_zero_modes)
-            self.assertEqual(non_zero_modes, processed_non_zero_modes)
 
     @ddt.data(True, False)
     @mock.patch("enterprise.utils.CourseEnrollmentAllowed")
