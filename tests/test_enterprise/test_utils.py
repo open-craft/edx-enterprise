@@ -498,7 +498,7 @@ class TestUtils(unittest.TestCase):
     @mock.patch("enterprise.utils.CourseEnrollmentAllowed")
     def test_ensure_course_enrollment_is_allowed(self, invite_only, mock_cea):
         """
-        Test that the CourseEnrollmentAllowed is created only for the "invite_only" courses.
+        Test that the enrollment allow endpoint is called for the "invite_only" courses.
         """
         self.create_user()
         mock_enrollment_api = mock.Mock()
@@ -507,9 +507,9 @@ class TestUtils(unittest.TestCase):
         ensure_course_enrollment_is_allowed("test-course-id", self.user.email, mock_enrollment_api)
 
         if invite_only:
-            mock_cea.objects.update_or_create.assert_called_with(
-                course_id="test-course-id",
-                email=self.user.email
+            mock_enrollment_api.allow_enrollment.assert_called_with(
+                self.user.email,
+                "test-course-id",
             )
         else:
-            mock_cea.objects.update_or_create.assert_not_called()
+            mock_enrollment_api.allow_enrollment.assert_not_called()
