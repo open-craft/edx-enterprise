@@ -411,11 +411,6 @@ class EnterpriseCustomer(TimeStampedModel):
         help_text=_("The email address where learner's reply to enterprise emails will be delivered.")
     )
 
-    hide_course_price_when_zero = models.BooleanField(
-        default=False,
-        help_text=_("Specify whether course cost should be hidden in the landing page when the final price is zero.")
-    )
-
     allow_enrollment_in_invite_only_courses = models.BooleanField(
         default=False,
         help_text=_(
