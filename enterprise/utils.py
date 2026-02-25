@@ -2117,6 +2117,8 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
                 [{ 'user_id': <lms_user_id>, 'email': <email>, 'course_run_key': <key> } ... ]
         }
     """
+    from enterprise.api_client.lms import EnrollmentApiClient  # pylint: disable=import-outside-toplevel
+    enrollment_api_client = EnrollmentApiClient()
     results = {
         'successes': [],
         'pending': [],
@@ -2132,6 +2134,7 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
         activation_link = subsidy_user_info.get('activation_link')
         force_enrollment = subsidy_user_info.get('force_enrollment', False)
         is_default_auto_enrollment = subsidy_user_info.get('is_default_auto_enrollment', False)
+        invitation_only = subsidy_user_info.get('invitation_only')
 
         if user_id and user_email:
             user = User.objects.filter(id=subsidy_user_info['user_id']).first()
@@ -2154,6 +2157,8 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
                 enrollment_source = enterprise_enrollment_source_model().get_source(
                     enterprise_enrollment_source_model().CUSTOMER_ADMIN
                 )
+                if invitation_only and enterprise_customer.allow_enrollment_in_invite_only_courses:
+                    ensure_course_enrollment_is_allowed(course_run_key, user.email, enrollment_api_client)
                 succeeded, created, source_uuid = customer_admin_enroll_user_with_status(
                     enterprise_customer,
                     user,
@@ -2193,6 +2198,8 @@ def enroll_subsidy_users_in_courses(enterprise_customer, subsidy_users_info, dis
                     discount=discount,
                     license_uuid=license_uuid
                 )
+                if invitation_only and enterprise_customer.allow_enrollment_in_invite_only_courses:
+                    ensure_course_enrollment_is_allowed(course_run_key, user_email, enrollment_api_client)
                 results['pending'].append({
                     'user': pending_user,
                     'email': user_email,
@@ -2649,3 +2656,17 @@ def get_user_details(enterprise_customer, user_id):
     attributes = {username_attr_key: [user_id]}
 
     return idp_config.get_user_details(attributes)
+
+
+def ensure_course_enrollment_is_allowed(course_id: str, email: str, enrollment_api_client):
+    """
+    Calls the enrollment API to create a CourseEnrollmentAllowed object for
+    invitation-only courses.
+    Arguments:
+        course_id (str): ID of the course to allow enrollment
+        email (str): email of the user whose enrollment should be allowed
+        enrollment_api_client (:class:`enterprise.api_client.lms.EnrollmentApiClient`): Enrollment API Client
+    """
+    course_details = enrollment_api_client.get_course_details(course_id)
+    if course_details["invite_only"]:
+        enrollment_api_client.allow_enrollment(email, course_id)

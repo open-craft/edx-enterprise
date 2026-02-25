@@ -477,6 +477,14 @@ class EnterpriseCustomer(TimeStampedModel):
         help_text=_("Display Demo data from analyitcs and learner progress report for demo customer.")
     )
 
+    allow_enrollment_in_invite_only_courses = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Specifies if learners are allowed to enroll into courses marked as 'invitation-only', "
+            "when they attempt to enroll from the landing page."
+        )
+    )
+
     contact_email = models.EmailField(
         verbose_name="Customer admin contact email:",
         null=True,
