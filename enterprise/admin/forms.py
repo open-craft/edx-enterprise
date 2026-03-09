@@ -417,6 +417,7 @@ class EnterpriseCustomerAdminForm(forms.ModelForm):
             "enable_browse_and_request",
             "enable_slug_login",
             "show_videos_in_learner_portal_search_results",
+            "allow_enrollment_in_invite_only_courses",
             "contact_email",
             "default_contract_discount",
             "default_language",

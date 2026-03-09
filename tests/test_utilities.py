@@ -165,6 +165,7 @@ class TestEnterpriseUtils(unittest.TestCase):
                 "enable_learner_portal_sidebar_message",
                 "enable_analytics_screen",
                 "enable_slug_login",
+                "allow_enrollment_in_invite_only_courses",
                 "contact_email",
                 "default_contract_discount",
                 "default_language",

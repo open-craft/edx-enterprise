@@ -823,3 +823,57 @@ def test_get_course_certificate():
     client = lms_api.CertificatesApiClient('staff-user-goes-here')
     actual_response = client.get_course_certificate(course_id, username)
     assert actual_response == expected_response
+
+
+@responses.activate
+@mock.patch('enterprise.api_client.client.JwtBuilder', mock.Mock())
+def test_allow_enrollment():
+    email = "student@enterprise.com"
+    course_id = "course-v1:edX+DemoX+Demo_Course"
+    expected_response = {
+        "email": email,
+        "course_id": course_id,
+        "auto_enroll": False
+    }
+    responses.add(
+        responses.POST,
+        _url("enrollment", "enrollment_allowed/"),
+        json=expected_response,
+    )
+
+    client = lms_api.EnrollmentApiClient()
+    allowed = client.allow_enrollment(email, course_id)
+    assert allowed == expected_response
+
+
+@responses.activate
+@mock.patch('enterprise.api_client.client.JwtBuilder', mock.Mock())
+def test_allow_enrollment_raises_an_exception_on_error():
+    expected_response = {"message": "Bad Request"}
+    responses.add(
+        responses.POST,
+        _url("enrollment", "enrollment_allowed/"),
+        json=expected_response,
+        status=requests.codes.bad_request
+    )
+
+    client = lms_api.EnrollmentApiClient()
+    with raises(requests.HTTPError):
+        client.allow_enrollment("", "")
+
+
+@responses.activate
+@mock.patch('enterprise.api_client.client.JwtBuilder', mock.Mock())
+def test_allow_enrollment_does_not_raise_exception_on_conflict():
+    email = "student@enterprise.com"
+    course_id = "course-v1:edX+DemoX+Demo_Course"
+    expected_response = {"message": f"An enrollment allowed with email {email} and course {course_id} already exists."}
+    responses.add(
+        responses.POST,
+        _url("enrollment", "enrollment_allowed/"),
+        json=expected_response,
+        status=requests.codes.conflict
+    )
+
+    client = lms_api.EnrollmentApiClient()
+    assert expected_response == client.allow_enrollment(email, course_id)

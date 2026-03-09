@@ -63,6 +63,7 @@ from enterprise.utils import (
     CourseEnrollmentPermissionError,
     NotConnectedToOpenEdX,
     clean_html_for_template_rendering,
+    ensure_course_enrollment_is_allowed,
     filter_audit_course_modes,
     format_price,
     get_active_course_runs,
@@ -689,6 +690,11 @@ class GrantDataSharingPermissions(View):
                             course_modes=course_mode
                         )
                     )
+                    if enterprise_customer.allow_enrollment_in_invite_only_courses:
+                        ensure_course_enrollment_is_allowed(course_id, request.user.email, enrollment_api_client)
+                        LOGGER.info(
+                            f'User {request.user.username} is allowed to enroll in Course {course_id}'
+                        )
                     try:
                         enrollment_api_client.enroll_user_in_course(
                             request.user.username,
